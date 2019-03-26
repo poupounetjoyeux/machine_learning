@@ -7,12 +7,13 @@ using std::time;
 
 extern "C" {
 
-	double predict(double* model, double* inputk, int size);
 	void learn(double* model, double* inputk, int inputsDimension, int predictedSign, int expectedSign, double learnStep);
 	int sgn(double number);
 	__declspec(dllexport) double* create_model(int inputsDimension);
 	__declspec(dllexport) void train_model(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns, double learnStep, int nbIterations);
-
+	__declspec(dllexport) int predict(double* model, double* inputk, int inputsDimension);
+	__declspec(dllexport) void release_model(double* model);
+	
 	__declspec(dllexport) double* create_model(int inputsDimension) {
 		double *arr = (double*)malloc(sizeof(int)*inputsDimension + 1);
 		srand(time(nullptr));
@@ -34,6 +35,19 @@ extern "C" {
 		}
 	}
 
+	__declspec(dllexport) int predict(double* model, double* inputk, int inputsDimension) {
+		double result = model[0];
+		for (int i = 0; i < inputsDimension; i++) {
+			result += model[i + 1] * inputk[i];
+		}
+		return sgn(result);
+	}
+
+	__declspec(dllexport) void release_model(double* model)
+	{
+		free(model);
+	}
+
 	int sgn(double number){
 		return number > 0 ? 1 : -1;
 	}
@@ -44,15 +58,7 @@ extern "C" {
 		model[0] = model[0] + learnStep * alpha;
 		for (int i = 0; i < inputsDimension; i++)
 		{
-			model[i+1] = model[0] + learnStep * alpha * inputk[i];
+			model[i + 1] = model[i+1] + learnStep * alpha * inputk[i];
 		}
-	}
-
-	double predict(double* model, double* inputk, int size) {
-		double result = model[0];
-		for (int i = 0; i < size; i++) {
-			result += model[i + 1] * inputk[i];
-		}
-		return sgn(result);
 	}
 }
