@@ -20,6 +20,7 @@ namespace Assets
 
             Debug.Log($"Sphere number : {spheres.Length}");
             Debug.Log($"PlanSphere number : {spheresPlan.Length}");
+            Debug.Log("Starting to call library for a LinearClassification");
 
             var model = ClassificationLibrary.create_model(Dimensions);
 
