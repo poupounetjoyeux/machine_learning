@@ -6,7 +6,7 @@ using std::srand;
 using std::time;
 
 extern "C" {
-	__declspec(dllexport) double* create_dataset(int inputsDimension) {
+	__declspec(dllexport) double* create_model(int inputsDimension) {
 		double *arr = (double*)malloc(sizeof(int)*inputsDimension + 1);
 		srand(time(nullptr));
 		
