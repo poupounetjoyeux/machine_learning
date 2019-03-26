@@ -33,4 +33,5 @@ packages/
 /project_ML/Library/
 /project_ML/Temp/
 /project_ML/Assets/Plugins/
-.idea
+*.idea*
+
