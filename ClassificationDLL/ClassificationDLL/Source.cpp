@@ -7,15 +7,24 @@ using std::time;
 
 extern "C" {
 
+	typedef struct MultiLayerModel {
+		double** neuronesResults;
+		double** w;
+		double** sigmas;
+		int nbLayers;
+		int* superParam;
+	} MultiLayerModel;
+
 	int sgn(double number);
 	__declspec(dllexport) double* create_model(int inputsDimension);
 	__declspec(dllexport) void train_model_linear_classification(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns, double learnStep, int nbIterations);
 	__declspec(dllexport) void train_model_linear_regression(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns);
+	__declspec(dllexport) void train_model_multilayer_classification(double* model, double* inputs, int inputsDimension, int nbInputs, int nbLayers);
 	__declspec(dllexport) int predict(double* model, double* inputk, int inputsDimension);
 	__declspec(dllexport) void release_model(double* model);
 	
 	__declspec(dllexport) double* create_model(int inputsDimension) {
-		double *arr = (double*)malloc(sizeof(int)*inputsDimension + 1);
+		double *arr = (double*)malloc(sizeof(double)*inputsDimension + 1);
 		srand(time(nullptr));
 		
 		for (int i = 0; i < inputsDimension + 1; i ++)
@@ -25,10 +34,32 @@ extern "C" {
 		return arr;
 	}
 
+	__declspec(dllexport) MultiLayerModel create_multilayer_model(int* superParam, int nbLayer) {
+		MultiLayerModel model;
+		model.superParam = superParam;
+		model.nbLayers = nbLayer;
+		model.neuronesResults = (double **)malloc(sizeof(double *) * nbLayer);
+		for (int i = 0; i < nbLayer; i++)
+		{
+			model.neuronesResults[i] = (double *)malloc(sizeof(double) * superParam[i]);
+		}
+
+
+		/*model. = (double*)malloc(sizeof(double) * totalNeurone);
+
+	for (int i = 0; i < totalNeurone; i++)
+		{
+			arr[i] = ((double)rand() / RAND_MAX) * 2 - 1;
+		}
+		
+		model.
+		return ;*/
+	}
+
 	__declspec(dllexport) void train_model_linear_classification(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns, double learnStep, int nbIterations) {
 		for (int i = 0; i < nbIterations; i++) {
 			for (int k = 0; k < nbInputs; k++) {
-				double* inputk = inputs + k * 2;
+				double* inputk = inputs + k * inputsDimension;
 				int predictSign = predict(model, inputk, inputsDimension);
 				int alpha = expectedSigns[k] - predictSign;
 				model[0] = model[0] + learnStep * alpha;
@@ -38,6 +69,10 @@ extern "C" {
 				}
 			}
 		}
+	}
+
+	__declspec(dllexport) void train_model_multilayer_classification(double* model, double* inputs, int inputsDimension, int nbInputs, int* superParam, int nbLayers, int totalNeurone, int biais) {
+		
 	}
 
 	__declspec(dllexport) void train_model_linear_regression(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns) {

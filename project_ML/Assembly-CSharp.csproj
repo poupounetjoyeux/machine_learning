@@ -56,6 +56,7 @@
      <Compile Include="Assets\ClassificationLibrary.cs" />
      <Compile Include="Assets\LinearClassification.cs" />
      <Compile Include="Assets\LinearRegression.cs" />
+     <Compile Include="Assets\MultiLayerClassification.cs" />
  <Reference Include="Unity.TextMeshPro.Editor">
  <HintPath>C:/Users/poupo/Desktop/machine_learning/project_ML/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
  </Reference>

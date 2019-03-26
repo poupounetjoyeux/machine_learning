@@ -4,28 +4,8 @@ using UnityEngine;
 
 namespace Assets
 {
-    public class LinearClassification : MonoBehaviour
+    public class MultiLayerClassification : MonoBehaviour
     {
-        public const int Dimensions = 2;
-
-        [SerializeField]
-        private int _numberOfIterations = 10000;
-
-        public int NumberOfIterations
-        {
-            get => _numberOfIterations;
-            set => _numberOfIterations = value;
-        }
-
-        [SerializeField]
-        private double _learnStep = 0.001;
-
-        public double LearnStep
-        {
-            get => _learnStep;
-            set => _learnStep = value;
-        }
-
         // Start is called before the first frame update
         private void Start()
         {
@@ -51,18 +31,12 @@ namespace Assets
             foreach (var sphere in spheresPlan)
             {
                 var position = sphere.transform.position;
-                var point = new double[] {position.x, position.z};
+                var point = new double[] { position.x, position.z };
                 var newY = ClassificationLibrary.predict(model, point, Dimensions);
                 sphere.transform.position = new Vector3(position.x, newY, position.z);
             }
 
             ClassificationLibrary.release_model(model);
-        }
-
-        // Update is called once per frame
-        private void Update()
-        {
-        
         }
     }
 }
