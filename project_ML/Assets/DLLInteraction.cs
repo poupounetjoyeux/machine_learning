@@ -1,19 +1,33 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
-public class DLLInteraction : MonoBehaviour
+namespace Assets
 {
-    // Start is called before the first frame update
-    void Start()
+    public class DllInteraction : MonoBehaviour
     {
-        var spheres = GameObject.FindGameObjectsWithTag("mySphere");
-        var defaultModel = ClassificationLibrary.create_model(2);
-    }
+        // Start is called before the first frame update
+        private void Start()
+        {
+            var spheresPlan = GameObject.FindGameObjectsWithTag("plan");
+            var spheres = GameObject.FindGameObjectsWithTag("sphere");
+            var defaultModel = ClassificationLibrary.create_model(2);
 
-    // Update is called once per frame
-    void Update()
-    {
+            var expectedSigns = spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1);
+            var inputs = new List<double>();
+            foreach (var sphere in spheres)
+            {
+                inputs.Add(sphere.transform.position.x);
+                inputs.Add(sphere.transform.position.z);
+            }
+
+            ClassificationLibrary.train_model(defaultModel, inputs.ToArray(), 2, spheres.Length, expectedSigns.ToArray(), 0.001, 100);
+        }
+
+        // Update is called once per frame
+        private void Update()
+        {
         
+        }
     }
 }
