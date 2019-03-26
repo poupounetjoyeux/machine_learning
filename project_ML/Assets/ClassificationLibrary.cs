@@ -15,8 +15,12 @@ namespace Assets
         public static extern void release_model(IntPtr model);
 
         [DllImport("ClassificationDLL")]
-        public static extern void train_model(IntPtr model, double[] inputs, int inputsDimension, int nbInputs,
+        public static extern void train_model_linear_classification(IntPtr model, double[] inputs, int inputsDimension, int nbInputs,
             int[] expectedSigns, double learnStep, int nbIterations);
+
+        [DllImport("ClassificationDLL")]
+        public static extern void train_model_linear_regression(IntPtr model, double[] inputs, int inputsDimension,
+            int nbInputs, int[] expectedSigns);
     }
 }
 
