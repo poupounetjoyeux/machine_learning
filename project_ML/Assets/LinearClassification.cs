@@ -25,8 +25,7 @@ namespace Assets
             get => _learnStep;
             set => _learnStep = value;
         }
-
-        // Start is called before the first frame update
+        
         private void Start()
         {
             var spheresPlan = GameObject.FindGameObjectsWithTag("plan");
@@ -36,7 +35,7 @@ namespace Assets
             Debug.Log($"PlanSphere number : {spheresPlan.Length}");
             Debug.Log("Starting to call library for a LinearClassification");
 
-            var model = ClassificationLibrary.create_model(Dimensions);
+            var model = ClassificationLibrary.createModel(Dimensions);
 
             var expectedSigns = spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1);
             var inputs = new List<double>();
@@ -46,23 +45,17 @@ namespace Assets
                 inputs.Add(sphere.transform.position.z);
             }
 
-            ClassificationLibrary.train_model_linear_classification(model, inputs.ToArray(), Dimensions, spheres.Length, expectedSigns.ToArray(), LearnStep, NumberOfIterations);
+            ClassificationLibrary.trainModelLinearClassification(model, inputs.ToArray(), Dimensions, spheres.Length, expectedSigns.ToArray(), LearnStep, NumberOfIterations);
 
             foreach (var sphere in spheresPlan)
             {
                 var position = sphere.transform.position;
                 var point = new double[] {position.x, position.z};
-                var newY = ClassificationLibrary.predict(model, point, Dimensions);
+                var newY = ClassificationLibrary.predictClassificationModel(model, point, Dimensions);
                 sphere.transform.position = new Vector3(position.x, newY, position.z);
             }
 
-            ClassificationLibrary.release_model(model);
-        }
-
-        // Update is called once per frame
-        private void Update()
-        {
-        
+            ClassificationLibrary.releaseModel(model);
         }
     }
 }
