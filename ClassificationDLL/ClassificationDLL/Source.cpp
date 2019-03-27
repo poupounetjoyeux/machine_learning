@@ -71,7 +71,7 @@ extern "C" {
 			//Add biais
 			model->neuronesResults[i + 1][superParam[i + 1]] = 1;
 
-			model->deltas[i] = (double *)malloc(sizeof(double) * superParam[i + 1]);
+			model->deltas[i] = (double *)malloc(sizeof(double) * (superParam[i + 1] + 1));
 			model->w[i] = (double **)malloc(sizeof(double*) * (superParam[i] + 1));
 			for (int j = 0; j < superParam[i] + 1; j++)
 			{
