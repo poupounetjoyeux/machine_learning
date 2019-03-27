@@ -11,23 +11,23 @@ namespace Assets
         public static extern IntPtr createModel(int inputsDimension);
 
         [DllImport("ClassificationDLL")]
-        public static extern IntPtr createMultilayerModel(int[] superParam, int nbLayer, int biais);
+        public static extern IntPtr createMultilayerModel(int[] superParam, int nbLayer, int biais, double learnStep);
 
         #endregion
 
         #region Prediction
 
         [DllImport("ClassificationDLL")]
-        public static extern int predictClassificationModel(IntPtr model, double[] inputk, int dimensions);
+        public static extern int predictClassificationModel(IntPtr model, double[] inputk, int inputsDimension);
 
         [DllImport("ClassificationDLL")]
-        public static extern double predictRegressionModel(IntPtr model, double[] inputk, int dimensions);
+        public static extern double predictRegressionModel(IntPtr model, double[] inputk, int inputsDimension);
 
         [DllImport("ClassificationDLL")]
-        public static extern int predictMultilayerClassificationModel(IntPtr model, double[] inputk, int inputsDimension);
+        public static extern int predictMultilayerClassificationModel(IntPtr model, double[] inputk);
 
         [DllImport("ClassificationDLL")]
-        public static extern double predictMultilayerRegressionModel(IntPtr model, double[] inputk, int inputsDimension);
+        public static extern double predictMultilayerRegressionModel(IntPtr model, double[] inputk);
 
         #endregion
 
@@ -43,11 +43,11 @@ namespace Assets
 
         [DllImport("ClassificationDLL")]
         public static extern void trainModelMultilayerClassification(IntPtr model, double[] inputs,
-            int inputsDimension, int nbInputs);
+            int nbInputs, int[] expectedSigns);
 
         [DllImport("ClassificationDLL")]
         public static extern void trainModelMultilayerRegression(IntPtr model, double[] inputs,
-            int inputsDimension, int nbInputs);
+            int nbInputs, int[] expectedSigns);
 
         #endregion
 

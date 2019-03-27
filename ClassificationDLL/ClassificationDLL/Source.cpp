@@ -131,7 +131,7 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) void trainModelMultilayeRegression(MultiLayerModel* model, double* inputs, int nbInputs, int* expectedSigns) {
+	__declspec(dllexport) void trainModelMultilayerRegression(MultiLayerModel* model, double* inputs, int nbInputs, int* expectedSigns) {
 		for (int input = 0; input < nbInputs; input++)
 		{
 			processPredictLayers(model, inputs + (input * 2));
