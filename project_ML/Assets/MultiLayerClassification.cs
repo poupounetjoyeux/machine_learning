@@ -23,7 +23,7 @@ namespace Assets
         }
 
         [SerializeField]
-        private int _iterations = 1000;
+        private int _iterations = 1;
 
         public int Iterations
         {

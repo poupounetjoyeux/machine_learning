@@ -5,8 +5,14 @@ using UnityEngine;
 
 namespace Assets
 {
-    public class MultiLayerRegression : MonoBehaviour
+    public class MultiLayerRegresion : MonoBehaviour
     {
+        private GameObject[] _spheresPlan;
+        private GameObject[] _spheres;
+        private List<double> _inputs;
+        private IntPtr _model;
+        private IEnumerable<int> _expectedSigns;
+
         [SerializeField]
         private string _superParams = "2;1";
 
@@ -17,7 +23,7 @@ namespace Assets
         }
 
         [SerializeField]
-        private int _iterations = 1000;
+        private int _iterations = 1;
 
         public int Iterations
         {
@@ -39,34 +45,44 @@ namespace Assets
             var superParam = SuperParams.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse)
                 .ToArray();
 
-            var spheresPlan = GameObject.FindGameObjectsWithTag("plan");
-            var spheres = GameObject.FindGameObjectsWithTag("sphere");
+            _spheresPlan = GameObject.FindGameObjectsWithTag("plan");
+            _spheres = GameObject.FindGameObjectsWithTag("sphere");
 
-            Debug.Log($"Sphere number : {spheres.Length}");
-            Debug.Log($"PlanSphere number : {spheresPlan.Length}");
+            Debug.Log($"Sphere number : {_spheres.Length}");
+            Debug.Log($"PlanSphere number : {_spheres.Length}");
             Debug.Log("Starting to call library for a LinearClassification");
 
-            var model = ClassificationLibrary.createMultilayerModel(superParam, superParam.Length, LearnStep);
+            _model = ClassificationLibrary.createMultilayerModel(superParam, superParam.Length, LearnStep);
 
-            var expectedSigns = spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1);
-            var inputs = new List<double>();
-            foreach (var sphere in spheres)
+            _expectedSigns = _spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1);
+            _inputs = new List<double>();
+            foreach (var sphere in _spheres)
             {
-                inputs.Add(sphere.transform.position.x);
-                inputs.Add(sphere.transform.position.z);
+                _inputs.Add(sphere.transform.position.x);
+                _inputs.Add(sphere.transform.position.z);
             }
+        }
 
-            ClassificationLibrary.trainModelMultilayerRegression(model, inputs.ToArray(), spheres.Length, expectedSigns.ToArray(), Iterations);
+        private void Update()
+        {
+            if (!Input.GetKey(KeyCode.Space))
+            {
+                return;
+            }
+            ClassificationLibrary.trainModelMultilayerRegression(_model, _inputs.ToArray(), _spheres.Length, _expectedSigns.ToArray(), Iterations);
 
-            foreach (var sphere in spheresPlan)
+            foreach (var sphere in _spheresPlan)
             {
                 var position = sphere.transform.position;
                 var point = new double[] { position.x, position.z };
-                var newY = ClassificationLibrary.predictMultilayerRegressionModel(model, point);
+                var newY = ClassificationLibrary.predictMultilayerRegressionModel(_model, point);
                 sphere.transform.position = new Vector3(position.x, (float)newY, position.z);
             }
+        }
 
-            ClassificationLibrary.releaseMultilayerModel(model);
+        private void OnApplicationQuit()
+        {
+            ClassificationLibrary.releaseMultilayerModel(_model);
         }
     }
 }
