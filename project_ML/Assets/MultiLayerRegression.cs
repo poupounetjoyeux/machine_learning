@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Assets
 {
-    public class MultiLayerRegresion : MonoBehaviour
+    public class MultiLayerRegression : MonoBehaviour
     {
         private GameObject[] _spheresPlan;
         private GameObject[] _spheres;
