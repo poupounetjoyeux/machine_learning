@@ -11,7 +11,7 @@ namespace Assets
         public static extern IntPtr createModel(int inputsDimension);
 
         [DllImport("ClassificationDLL")]
-        public static extern IntPtr createMultilayerModel(int[] superParam, int nbLayer, int biais, double learnStep);
+        public static extern IntPtr createMultilayerModel(int[] superParam, int nbLayer, double learnStep);
 
         #endregion
 
@@ -43,11 +43,11 @@ namespace Assets
 
         [DllImport("ClassificationDLL")]
         public static extern void trainModelMultilayerClassification(IntPtr model, double[] inputs,
-            int nbInputs, int[] expectedSigns);
+            int nbInputs, int[] expectedSigns, int iterations);
 
         [DllImport("ClassificationDLL")]
         public static extern void trainModelMultilayerRegression(IntPtr model, double[] inputs,
-            int nbInputs, int[] expectedSigns);
+            int nbInputs, int[] expectedSigns, int iterations);
 
         #endregion
 

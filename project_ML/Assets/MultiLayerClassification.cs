@@ -17,12 +17,12 @@ namespace Assets
         }
 
         [SerializeField]
-        private int _biais = 1;
+        private int _iterations = 1;
 
-        public int Biais
+        public int Iterations
         {
-            get => _biais;
-            set => _biais = value;
+            get => _iterations;
+            set => _iterations = value;
         }
 
         [SerializeField]
@@ -46,7 +46,7 @@ namespace Assets
             Debug.Log($"PlanSphere number : {spheresPlan.Length}");
             Debug.Log("Starting to call library for a LinearClassification");
             
-            var model = ClassificationLibrary.createMultilayerModel(superParam, superParam.Length, Biais, LearnStep);
+            var model = ClassificationLibrary.createMultilayerModel(superParam, superParam.Length, LearnStep);
 
             var expectedSigns = spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1);
             var inputs = new List<double>();
@@ -56,7 +56,7 @@ namespace Assets
                 inputs.Add(sphere.transform.position.z);
             }
 
-            ClassificationLibrary.trainModelMultilayerClassification(model, inputs.ToArray(), spheres.Length, expectedSigns.ToArray());
+            ClassificationLibrary.trainModelMultilayerClassification(model, inputs.ToArray(), spheres.Length, expectedSigns.ToArray(), Iterations);
 
             foreach (var sphere in spheresPlan)
             {
