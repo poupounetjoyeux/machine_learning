@@ -5603,9 +5603,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 315ef121997b2444fa34154031a4ef21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _superParams: 2;3;2;3;2;6;1
-  _biais: 1
-  _learSteps: 0.001
+  _superParams: 2;1
+  _iterations: 10000
+  _learnStep: 0.001
 --- !u!4 &1356162258
 Transform:
   m_ObjectHideFlags: 0

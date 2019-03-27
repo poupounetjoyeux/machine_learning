@@ -74,8 +74,8 @@ extern "C" {
 			model->w[i] = (double **)malloc(sizeof(double*) * (superParam[i] + 1));
 			for (int j = 0; j < superParam[i] + 1; j++)
 			{
-				model->w[i][j] = (double*)malloc(sizeof(double) * superParam[i + 1]);
-				for (int k = 0; k < superParam[i + 1]; k++)
+				model->w[i][j] = (double*)malloc(sizeof(double) * (superParam[i + 1] + 1));
+				for (int k = 0; k < superParam[i + 1] + 1; k++)
 				{
 					model->w[i][j][k] = randomDouble();
 				}
@@ -163,6 +163,7 @@ extern "C" {
 	{
 		for (int layer = model->nbLayers - 2; layer > 0; layer--)
 		{
+			//pour le biais
 			for (int neur = 0; neur < model->superParam[layer] + 1; neur++)
 			{
 				double sigma = 0.0;
@@ -175,7 +176,8 @@ extern "C" {
 		}
 		for (int layer = 0; layer < model->nbLayers - 1; layer++)
 		{
-			for (int neur = 0; neur < model->superParam[layer]+1; neur++)
+			//pour le biais
+			for (int neur = 0; neur < model->superParam[layer] + 1; neur++)
 			{
 				for (int nextNeur = 0; nextNeur < model->superParam[layer + 1]; nextNeur++)
 				{
@@ -243,6 +245,7 @@ extern "C" {
 		{
 			free(model->neuronesResults[i]);
 			free(model->deltas[i]);
+			//to release biais  +1
 			for (int j = 0; j < model->superParam[i] + 1; j++)
 			{
 				free(model->w[i][j]);
