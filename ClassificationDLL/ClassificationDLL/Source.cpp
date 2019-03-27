@@ -127,7 +127,7 @@ extern "C" {
 			for (int input = 0; input < nbInputs; input++)
 			{
 				processPredictLayers(model, inputs + (input * 2));
-				retropropagateLayersClassification(model, expectedSigns + (input * 2));
+				retropropagateLayersClassification(model, expectedSigns + input);
 			}
 		}
 	}
@@ -138,7 +138,7 @@ extern "C" {
 			for (int input = 0; input < nbInputs; input++)
 			{
 				processPredictLayers(model, inputs + (input * 2));
-				retropropagateLayersRegression(model, expectedSigns + (input * 2));
+				retropropagateLayersRegression(model, expectedSigns + input);
 			}
 		}
 	}
@@ -167,7 +167,7 @@ extern "C" {
 			for (int neur = 0; neur < model->superParam[layer] + 1; neur++)
 			{
 				double sigma = 0.0;
-				for (int nextNeur = 0; nextNeur < model->superParam[layer + 1]; nextNeur++)
+				for (int nextNeur = 0; nextNeur < model->superParam[layer + 1] + 1; nextNeur++)
 				{
 					sigma += model->w[layer][neur][nextNeur] * model->deltas[layer][nextNeur];
 				}
@@ -179,9 +179,9 @@ extern "C" {
 			//pour le biais
 			for (int neur = 0; neur < model->superParam[layer] + 1; neur++)
 			{
-				for (int nextNeur = 0; nextNeur < model->superParam[layer + 1]; nextNeur++)
+				for (int nextNeur = 0; nextNeur < model->superParam[layer + 1] + 1; nextNeur++)
 				{
-					model->w[layer][neur][nextNeur] = model->w[layer][neur][nextNeur] - model->learnStep * model->neuronesResults[layer + 1][nextNeur] * model->deltas[layer][nextNeur];
+					model->w[layer][neur][nextNeur] = model->w[layer][neur][nextNeur] - model->learnStep * model->neuronesResults[layer][neur] * model->deltas[layer][nextNeur];
 				}
 			}
 		}

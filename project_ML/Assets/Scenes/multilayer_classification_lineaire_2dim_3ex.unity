@@ -5604,7 +5604,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _superParams: 2;1
-  _iterations: 10000
+  _iterations: 1
   _learnStep: 0.001
 --- !u!4 &1356162258
 Transform:
