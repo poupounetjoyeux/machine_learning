@@ -22,7 +22,7 @@ extern "C" {
 	void retropropagateLayersClassification(MultiLayerModel* model, int* expectedSigns);
 	void retropropagateLayersRegression(MultiLayerModel* model, int* expectedSigns);
 	void retropropagateModel(MultiLayerModel* model);
-	void processPredictLayers(MultiLayerModel* model, double* inputk);
+	void processPredictLayers(MultiLayerModel* model, double* inputk, bool isRegression);
 
 	__declspec(dllexport) double* createModel(int inputsDimension);
 	__declspec(dllexport) MultiLayerModel* createMultilayerModel(int* superParam, int nbLayer, double learnStep);
@@ -126,7 +126,7 @@ extern "C" {
 		{
 			for (int input = 0; input < nbInputs; input++)
 			{
-				processPredictLayers(model, inputs + (input * 2));
+				processPredictLayers(model, inputs + (input * 2), false);
 				retropropagateLayersClassification(model, expectedSigns + input);
 			}
 		}
@@ -137,7 +137,7 @@ extern "C" {
 		{
 			for (int input = 0; input < nbInputs; input++)
 			{
-				processPredictLayers(model, inputs + (input * 2));
+				processPredictLayers(model, inputs + (input * 2), true);
 				retropropagateLayersRegression(model, expectedSigns + input);
 			}
 		}
@@ -203,7 +203,7 @@ extern "C" {
 		return result;
 	}
 
-	void processPredictLayers(MultiLayerModel* model, double* inputk)
+	void processPredictLayers(MultiLayerModel* model, double* inputk, bool isRegression)
 	{
 		for (int neur = 0; neur < model->superParam[0]; neur++)
 		{
@@ -219,18 +219,18 @@ extern "C" {
 				{
 					sigma += model->neuronesResults[layer][currentNeurone] * model->w[layer][currentNeurone][neuroneRes];
 				}
-				model->neuronesResults[layer + 1][neuroneRes] = tanh(sigma);
+				model->neuronesResults[layer + 1][neuroneRes] = isRegression && layer == model->nbLayers - 2 ? sigma : tanh(sigma);
 			}
 		}
 	}
 
 	__declspec(dllexport) int predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk) {
-		processPredictLayers(model, inputk);
+		processPredictLayers(model, inputk, false);
 		return signOf(model->neuronesResults[model->nbLayers - 1][0]);
 	}
 	
 	__declspec(dllexport) double predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk) {
-		processPredictLayers(model, inputk);
+		processPredictLayers(model, inputk, true);
 		return model->neuronesResults[model->nbLayers - 1][0];
 	}
 
