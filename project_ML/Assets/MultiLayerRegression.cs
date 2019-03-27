@@ -11,7 +11,7 @@ namespace Assets
         private GameObject[] _spheres;
         private List<double> _inputs;
         private IntPtr _model;
-        private IEnumerable<int> _expectedSigns;
+        private double[] _expectedSigns;
 
         [SerializeField]
         private string _superParams = "2;1";
@@ -54,7 +54,7 @@ namespace Assets
 
             _model = ClassificationLibrary.createMultilayerModel(superParam, superParam.Length, LearnStep);
 
-            _expectedSigns = _spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1);
+            _expectedSigns = _spheres.Select(sp => (double)sp.transform.position.y).ToArray();
             _inputs = new List<double>();
             foreach (var sphere in _spheres)
             {
@@ -69,14 +69,15 @@ namespace Assets
             {
                 return;
             }
-            ClassificationLibrary.trainModelMultilayerRegression(_model, _inputs.ToArray(), _spheres.Length, _expectedSigns.ToArray(), Iterations);
+            ClassificationLibrary.trainModelMultilayerRegression(_model, _inputs.ToArray(), _spheres.Length, _expectedSigns, Iterations);
 
             foreach (var sphere in _spheresPlan)
             {
                 var position = sphere.transform.position;
                 var point = new double[] { position.x, position.z };
-                var newY = ClassificationLibrary.predictMultilayerRegressionModel(_model, point);
-                sphere.transform.position = new Vector3(position.x, (float)newY, position.z);
+                var output = new double[1];
+                ClassificationLibrary.predictMultilayerRegressionModel(_model, point, output);
+                sphere.transform.position = new Vector3(position.x, (float)output[0], position.z);
             }
         }
 

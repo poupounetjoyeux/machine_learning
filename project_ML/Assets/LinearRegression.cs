@@ -19,7 +19,7 @@ namespace Assets
 
             var model = ClassificationLibrary.createModel(Dimensions);
 
-            var expectedSigns = spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1);
+            var expectedSigns = spheres.Select(sp => (double)sp.transform.position.y).ToArray();
             var inputs = new List<double>();
             foreach (var sphere in spheres)
             {
@@ -27,7 +27,7 @@ namespace Assets
                 inputs.Add(sphere.transform.position.z);
             }
 
-            ClassificationLibrary.trainModelLinearRegression(model, inputs.ToArray(), Dimensions, spheres.Length, expectedSigns.ToArray());
+            ClassificationLibrary.trainModelLinearRegression(model, inputs.ToArray(), Dimensions, spheres.Length, expectedSigns);
 
             foreach (var sphere in spheresPlan)
             {

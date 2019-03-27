@@ -3,6 +3,7 @@
 #include <math.h>
 
 using Eigen::MatrixXd;
+using Eigen::FullPivLU;
 using std::srand;
 using std::time;
 
@@ -19,8 +20,8 @@ extern "C" {
 
 	int signOf(double number);
 	double randomDouble();
-	void retropropagateLayersClassification(MultiLayerModel* model, int* expectedSigns);
-	void retropropagateLayersRegression(MultiLayerModel* model, int* expectedSigns);
+	void retropropagateLayersClassification(MultiLayerModel* model, double* expectedSigns);
+	void retropropagateLayersRegression(MultiLayerModel* model, double* expectedSigns);
 	void retropropagateModel(MultiLayerModel* model);
 	void processPredictLayers(MultiLayerModel* model, double* inputk, bool isRegression);
 
@@ -28,14 +29,14 @@ extern "C" {
 	__declspec(dllexport) MultiLayerModel* createMultilayerModel(int* superParam, int nbLayer, double learnStep);
 	
 	__declspec(dllexport) void trainModelLinearClassification(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns, double learnStep, int nbIterations);
-	__declspec(dllexport) void trainModelLinearRegression(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns);
-	__declspec(dllexport) void trainModelMultilayerClassification(MultiLayerModel* model, double* inputs, int nbInputs, int* expectedSigns, int iterations);
-	__declspec(dllexport) void trainModelMultilayerRegression(MultiLayerModel* model, double* inputs, int nbInputs, int* expectedSigns, int iterations);
+	__declspec(dllexport) void trainModelLinearRegression(double* model, double* inputs, int inputsDimension, int nbInputs, double* expectedSigns);
+	__declspec(dllexport) void trainModelMultilayerClassification(MultiLayerModel* model, double* inputs, int nbInputs, double* expectedSigns, int iterations);
+	__declspec(dllexport) void trainModelMultilayerRegression(MultiLayerModel* model, double* inputs, int nbInputs, double* expectedSigns, int iterations);
 	
 	__declspec(dllexport) int predictClassificationModel(double* model, double* inputk, int inputsDimension);
 	__declspec(dllexport) double predictRegressionModel(double* model, double* inputk, int inputsDimension);
-	__declspec(dllexport) int predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk);
-	__declspec(dllexport) double predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk);
+	__declspec(dllexport) void predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk, double* outputk);
+	__declspec(dllexport) void predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk, double* outputk);
 	
 	__declspec(dllexport) void releaseModel(double* model);
 	__declspec(dllexport) void releaseMultilayerModel(MultiLayerModel* model);
@@ -99,7 +100,7 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) void trainModelLinearRegression(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns) {
+	__declspec(dllexport) void trainModelLinearRegression(double* model, double* inputs, int inputsDimension, int nbInputs, double* expectedSigns) {
 		MatrixXd xMatrix(nbInputs, inputsDimension + 1);
 		MatrixXd yMatrix(nbInputs, 1);
 
@@ -114,6 +115,13 @@ extern "C" {
 			}
 		}
 
+		//trick for perfects aligned points
+		FullPivLU<MatrixXd> lu(xMatrix);
+		if (!lu.isInvertible())
+		{
+			xMatrix(0, 0) = xMatrix(0, 0) + 0.001;
+		}
+
 		MatrixXd result = ((xMatrix.transpose() * xMatrix).inverse() * xMatrix.transpose()) * yMatrix;
 
 		for (int i = 0; i <= inputsDimension; i++) {
@@ -121,29 +129,29 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) void trainModelMultilayerClassification(MultiLayerModel* model, double* inputs, int nbInputs, int* expectedSigns, int iterations) {
+	__declspec(dllexport) void trainModelMultilayerClassification(MultiLayerModel* model, double* inputs, int nbInputs, double* expectedSigns, int iterations) {
 		for (int i = 0; i < iterations; i++)
 		{
 			for (int input = 0; input < nbInputs; input++)
 			{
-				processPredictLayers(model, inputs + (input * 2), false);
-				retropropagateLayersClassification(model, expectedSigns + input);
+				processPredictLayers(model, inputs + (input * model->superParam[0]), false);
+				retropropagateLayersClassification(model, expectedSigns + (input * model->superParam[model->nbLayers - 1]));
 			}
 		}
 	}
 
-	__declspec(dllexport) void trainModelMultilayerRegression(MultiLayerModel* model, double* inputs, int nbInputs, int* expectedSigns, int iterations) {
+	__declspec(dllexport) void trainModelMultilayerRegression(MultiLayerModel* model, double* inputs, int nbInputs, double* expectedSigns, int iterations) {
 		for (int i = 0; i < iterations; i++)
 		{
 			for (int input = 0; input < nbInputs; input++)
 			{
-				processPredictLayers(model, inputs + (input * 2), true);
-				retropropagateLayersRegression(model, expectedSigns + input);
+				processPredictLayers(model, inputs + (input * model->superParam[0]), true);
+				retropropagateLayersRegression(model, expectedSigns + (input * model->superParam[model->nbLayers - 1]));
 			}
 		}
 	}
 
-	void retropropagateLayersClassification(MultiLayerModel* model, int* expectedSigns) {
+	void retropropagateLayersClassification(MultiLayerModel* model, double* expectedSigns) {
 		for (int lastNeurone = 0; lastNeurone < model->superParam[model->nbLayers - 1]; lastNeurone++)
 		{
 			model->deltas[model->nbLayers - 2][lastNeurone] = (1 - pow(model->neuronesResults[model->nbLayers - 1][lastNeurone], 2)) * (model->neuronesResults[model->nbLayers - 1][lastNeurone] - expectedSigns[lastNeurone]);
@@ -151,7 +159,7 @@ extern "C" {
 		retropropagateModel(model);
 	}
 
-	void retropropagateLayersRegression(MultiLayerModel* model, int* expectedSigns) {
+	void retropropagateLayersRegression(MultiLayerModel* model, double* expectedSigns) {
 		for (int lastNeurone = 0; lastNeurone < model->superParam[model->nbLayers - 1]; lastNeurone++)
 		{
 			model->deltas[model->nbLayers - 2][lastNeurone] = (model->neuronesResults[model->nbLayers - 1][lastNeurone] - expectedSigns[lastNeurone]);
@@ -174,6 +182,7 @@ extern "C" {
 				model->deltas[layer - 1][neur] = (1 - pow(model->neuronesResults[layer][neur], 2)) * sigma;
 			}
 		}
+
 		for (int layer = model->nbLayers - 2; layer >= 0; layer--)
 		{
 			//pour le biais
@@ -224,14 +233,14 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) int predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk) {
+	__declspec(dllexport) void predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk, double* outputk) {
 		processPredictLayers(model, inputk, false);
-		return signOf(model->neuronesResults[model->nbLayers - 1][0]);
+		memcpy(outputk, outputk = model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->superParam[model->nbLayers - 1]);
 	}
 	
-	__declspec(dllexport) double predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk) {
+	__declspec(dllexport) void predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk, double* outputk) {
 		processPredictLayers(model, inputk, true);
-		return model->neuronesResults[model->nbLayers - 1][0];
+		memcpy(outputk, outputk = model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->superParam[model->nbLayers - 1]);
 	}
 
 	__declspec(dllexport) void releaseModel(double* model)
@@ -241,6 +250,7 @@ extern "C" {
 
 	__declspec(dllexport) void releaseMultilayerModel(MultiLayerModel* model)
 	{
+		free(model->neuronesResults[model->nbLayers - 1]);
 		for (int i = 0; i < model->nbLayers - 1; i++)
 		{
 			free(model->neuronesResults[i]);
