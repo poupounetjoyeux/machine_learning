@@ -23,7 +23,7 @@ namespace Assets
         }
 
         [SerializeField]
-        private int _iterations = 1;
+        private int _iterations = 100;
 
         public int Iterations
         {
@@ -32,7 +32,7 @@ namespace Assets
         }
 
         [SerializeField]
-        private double _learnStep = 0.001;
+        private double _learnStep = 0.01;
 
         public double LearnStep
         {
@@ -49,7 +49,7 @@ namespace Assets
             _spheres = GameObject.FindGameObjectsWithTag("sphere");
 
             Debug.Log($"Sphere number : {_spheres.Length}");
-            Debug.Log($"PlanSphere number : {_spheres.Length}");
+            Debug.Log($"PlanSphere number : {_spheresPlan.Length}");
             Debug.Log("Starting to call library for a LinearClassification");
             
             _model = ClassificationLibrary.createMultilayerModel(superParam, superParam.Length, LearnStep);

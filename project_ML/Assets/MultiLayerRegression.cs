@@ -49,7 +49,7 @@ namespace Assets
             _spheres = GameObject.FindGameObjectsWithTag("sphere");
 
             Debug.Log($"Sphere number : {_spheres.Length}");
-            Debug.Log($"PlanSphere number : {_spheres.Length}");
+            Debug.Log($"PlanSphere number : {_spheresPlan.Length}");
             Debug.Log("Starting to call library for a LinearClassification");
 
             _model = ClassificationLibrary.createMultilayerModel(superParam, superParam.Length, LearnStep);
