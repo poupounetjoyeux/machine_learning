@@ -174,14 +174,14 @@ extern "C" {
 				model->deltas[layer - 1][neur] = (1 - pow(model->neuronesResults[layer][neur], 2)) * sigma;
 			}
 		}
-		for (int layer = 0; layer < model->nbLayers - 1; layer++)
+		for (int layer = model->nbLayers - 2; layer >= 0; layer++)
 		{
 			//pour le biais
 			for (int neur = 0; neur < model->superParam[layer] + 1; neur++)
 			{
 				for (int nextNeur = 0; nextNeur < model->superParam[layer + 1] + 1; nextNeur++)
 				{
-					model->w[layer][neur][nextNeur] = model->w[layer][neur][nextNeur] - model->learnStep * model->neuronesResults[layer][neur] * model->deltas[layer][nextNeur];
+					model->w[layer-1][neur][nextNeur] = model->w[layer-1][neur][nextNeur] - model->learnStep * model->neuronesResults[layer][neur] * model->deltas[layer][nextNeur];
 				}
 			}
 		}
