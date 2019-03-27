@@ -14,17 +14,17 @@ namespace Assets
         private double[] _expectedSigns;
 
         [SerializeField]
-        private string _superParams = "2;1";
+        private string _nplParams = "2;1";
 
-        public string SuperParams
+        public string NplParams
         {
-            get => _superParams;
-            set => _superParams = value;
+            get => _nplParams;
+            set => _nplParams = value;
         }
 
         [SerializeField]
         private int _iterations = 1;
-
+        
         public int Iterations
         {
             get => _iterations;
@@ -42,7 +42,7 @@ namespace Assets
 
         private void Start()
         {
-            var superParam = SuperParams.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse)
+            var superParam = NplParams.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse)
                 .ToArray();
 
             _spheresPlan = GameObject.FindGameObjectsWithTag("plan");

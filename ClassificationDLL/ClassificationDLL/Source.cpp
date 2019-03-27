@@ -14,7 +14,7 @@ extern "C" {
 		double*** w;
 		double** deltas;
 		int nbLayers;
-		int* superParam;
+		int* nplParams;
 		double learnStep;
 	} MultiLayerModel;
 
@@ -54,8 +54,8 @@ extern "C" {
 
 	__declspec(dllexport) MultiLayerModel* createMultilayerModel(int* superParam, int nbLayer, double learnStep) {
 		MultiLayerModel *model = (MultiLayerModel*)malloc(sizeof(MultiLayerModel));
-		model->superParam = (int*)malloc(sizeof(int) * nbLayer);
-		memcpy(model->superParam, superParam, sizeof(int) * nbLayer);
+		model->nplParams = (int*)malloc(sizeof(int) * nbLayer);
+		memcpy(model->nplParams, superParam, sizeof(int) * nbLayer);
 		model->nbLayers = nbLayer;
 		model->learnStep = learnStep;
 		model->neuronesResults = (double **)malloc(sizeof(double *) * nbLayer);
@@ -134,8 +134,8 @@ extern "C" {
 		{
 			for (int input = 0; input < nbInputs; input++)
 			{
-				processPredictLayers(model, inputs + (input * model->superParam[0]), false);
-				retropropagateLayersClassification(model, expectedSigns + (input * model->superParam[model->nbLayers - 1]));
+				processPredictLayers(model, inputs + (input * model->nplParams[0]), false);
+				retropropagateLayersClassification(model, expectedSigns + (input * model->nplParams[model->nbLayers - 1]));
 			}
 		}
 	}
@@ -145,14 +145,14 @@ extern "C" {
 		{
 			for (int input = 0; input < nbInputs; input++)
 			{
-				processPredictLayers(model, inputs + (input * model->superParam[0]), true);
-				retropropagateLayersRegression(model, expectedSigns + (input * model->superParam[model->nbLayers - 1]));
+				processPredictLayers(model, inputs + (input * model->nplParams[0]), true);
+				retropropagateLayersRegression(model, expectedSigns + (input * model->nplParams[model->nbLayers - 1]));
 			}
 		}
 	}
 
 	void retropropagateLayersClassification(MultiLayerModel* model, double* expectedSigns) {
-		for (int lastNeurone = 0; lastNeurone < model->superParam[model->nbLayers - 1]; lastNeurone++)
+		for (int lastNeurone = 0; lastNeurone < model->nplParams[model->nbLayers - 1]; lastNeurone++)
 		{
 			model->deltas[model->nbLayers - 2][lastNeurone] = (1 - pow(model->neuronesResults[model->nbLayers - 1][lastNeurone], 2)) * (model->neuronesResults[model->nbLayers - 1][lastNeurone] - expectedSigns[lastNeurone]);
 		}
@@ -160,7 +160,7 @@ extern "C" {
 	}
 
 	void retropropagateLayersRegression(MultiLayerModel* model, double* expectedSigns) {
-		for (int lastNeurone = 0; lastNeurone < model->superParam[model->nbLayers - 1]; lastNeurone++)
+		for (int lastNeurone = 0; lastNeurone < model->nplParams[model->nbLayers - 1]; lastNeurone++)
 		{
 			model->deltas[model->nbLayers - 2][lastNeurone] = (model->neuronesResults[model->nbLayers - 1][lastNeurone] - expectedSigns[lastNeurone]);
 		}
@@ -172,10 +172,10 @@ extern "C" {
 		for (int layer = model->nbLayers - 2; layer > 0; layer--)
 		{
 			//pour le biais
-			for (int neur = 0; neur < model->superParam[layer] + 1; neur++)
+			for (int neur = 0; neur < model->nplParams[layer] + 1; neur++)
 			{
 				double sigma = 0.0;
-				for (int nextNeur = 0; nextNeur < model->superParam[layer + 1] + 1; nextNeur++)
+				for (int nextNeur = 0; nextNeur < model->nplParams[layer + 1] + 1; nextNeur++)
 				{
 					sigma += model->w[layer][neur][nextNeur] * model->deltas[layer][nextNeur];
 				}
@@ -186,9 +186,9 @@ extern "C" {
 		for (int layer = model->nbLayers - 2; layer >= 0; layer--)
 		{
 			//pour le biais
-			for (int neur = 0; neur < model->superParam[layer] + 1; neur++)
+			for (int neur = 0; neur < model->nplParams[layer] + 1; neur++)
 			{
-				for (int nextNeur = 0; nextNeur < model->superParam[layer + 1] + 1; nextNeur++)
+				for (int nextNeur = 0; nextNeur < model->nplParams[layer + 1] + 1; nextNeur++)
 				{
 					model->w[layer][neur][nextNeur] = model->w[layer][neur][nextNeur] - model->learnStep * model->neuronesResults[layer][neur] * model->deltas[layer][nextNeur];
 				}
@@ -214,17 +214,17 @@ extern "C" {
 
 	void processPredictLayers(MultiLayerModel* model, double* inputk, bool isRegression)
 	{
-		for (int neur = 0; neur < model->superParam[0]; neur++)
+		for (int neur = 0; neur < model->nplParams[0]; neur++)
 		{
 			model->neuronesResults[0][neur] = inputk[neur];
 		}
 		for (int layer = 0; layer < model->nbLayers - 1; layer++)
 		{
-			for (int neuroneRes = 0; neuroneRes < model->superParam[layer + 1]; neuroneRes++)
+			for (int neuroneRes = 0; neuroneRes < model->nplParams[layer + 1]; neuroneRes++)
 			{
 				double sigma = 0.0;
 				//+1 pour le biais
-				for (int currentNeurone = 0; currentNeurone < model->superParam[layer] + 1; currentNeurone++)
+				for (int currentNeurone = 0; currentNeurone < model->nplParams[layer] + 1; currentNeurone++)
 				{
 					sigma += model->neuronesResults[layer][currentNeurone] * model->w[layer][currentNeurone][neuroneRes];
 				}
@@ -235,12 +235,12 @@ extern "C" {
 
 	__declspec(dllexport) void predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk, double* outputk) {
 		processPredictLayers(model, inputk, false);
-		memcpy(outputk, model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->superParam[model->nbLayers - 1]);
+		memcpy(outputk, model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->nplParams[model->nbLayers - 1]);
 	}
 	
 	__declspec(dllexport) void predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk, double* outputk) {
 		processPredictLayers(model, inputk, true);
-		memcpy(outputk, model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->superParam[model->nbLayers - 1]);
+		memcpy(outputk, model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->nplParams[model->nbLayers - 1]);
 	}
 
 	__declspec(dllexport) void releaseModel(double* model)
@@ -256,7 +256,7 @@ extern "C" {
 			free(model->neuronesResults[i]);
 			free(model->deltas[i]);
 			//to release biais  +1
-			for (int j = 0; j < model->superParam[i] + 1; j++)
+			for (int j = 0; j < model->nplParams[i] + 1; j++)
 			{
 				free(model->w[i][j]);
 			}
@@ -266,7 +266,7 @@ extern "C" {
 		free(model->neuronesResults);
 		free(model->deltas);
 		free(model->w);
-		free(model->superParam);
+		free(model->nplParams);
 
 		free(model);
 	}
