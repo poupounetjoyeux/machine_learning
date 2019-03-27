@@ -235,12 +235,12 @@ extern "C" {
 
 	__declspec(dllexport) void predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk, double* outputk) {
 		processPredictLayers(model, inputk, false);
-		memcpy(outputk, outputk = model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->superParam[model->nbLayers - 1]);
+		memcpy(outputk, model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->superParam[model->nbLayers - 1]);
 	}
 	
 	__declspec(dllexport) void predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk, double* outputk) {
 		processPredictLayers(model, inputk, true);
-		memcpy(outputk, outputk = model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->superParam[model->nbLayers - 1]);
+		memcpy(outputk, model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->superParam[model->nbLayers - 1]);
 	}
 
 	__declspec(dllexport) void releaseModel(double* model)
