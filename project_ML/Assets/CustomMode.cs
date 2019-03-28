@@ -4,6 +4,7 @@ namespace Assets
     {
         Default,
         Circle,
-        Xor
+        Xor,
+        Cross,
     }
 }
