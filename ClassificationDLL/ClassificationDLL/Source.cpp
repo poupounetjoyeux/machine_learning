@@ -230,7 +230,7 @@ extern "C" {
 		{
 			model->neuronesResults[0][neur] = inputk[neur];
 		}
-		for (int layer = 0; layer < model->nbLayer - 1; layer++)
+		for (int layer = 0; layer < model->nbLayers - 1; layer++)
 		{
 			for (int neuroneRes = 0; neuroneRes < model->nplParams[layer + 1]; neuroneRes++)
 			{
