@@ -5,6 +5,7 @@
 
 using namespace std;
 
+using Eigen::Vector2d;
 using Eigen::MatrixXd;
 using Eigen::FullPivLU;
 using std::srand;
@@ -21,6 +22,16 @@ extern "C" {
 		double learnStep;
 	} MultiLayerModel;
 
+	typedef struct RbfModel {
+		double ** points;
+		double * W;
+
+		double * inputs;
+		int nbInputs;
+
+		double gamma;
+	};
+
 	int signOf(double number);
 	double randomDouble();
 	int* randomIndexes(int nbInputs);
@@ -36,12 +47,15 @@ extern "C" {
 
 	__declspec(dllexport) double* createModel(int inputsDimension);
 	__declspec(dllexport) MultiLayerModel* createMultilayerModel(int* superParam, int nbLayer, double learnStep);
+	__declspec(dllexport) RbfModel* createRbfModel(int pointCount);
 	
 	__declspec(dllexport) void trainModelLinearClassification(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns, double learnStep, int nbIterations);
 	__declspec(dllexport) void trainModelLinearRegression(double* model, double* inputs, int inputsDimension, int nbInputs, double* expectedSigns);
 	
 	__declspec(dllexport) void trainModelMultilayerClassification(MultiLayerModel* model, double* inputs, int nbInputs, int* expectedSigns, int iterations);
 	__declspec(dllexport) void trainModelMultilayerRegression(MultiLayerModel* model, double* inputs, int nbInputs, double* expectedSigns, int iterations);
+
+	__declspec(dllexport) void trainRbfModel(RbfModel* model, double* inputs, int nbInputs, double* expectedSigns, int iterations);
 	
 	__declspec(dllexport) int predictClassificationModel(double* model, double* inputk, int inputsDimension);
 	__declspec(dllexport) double predictRegressionModel(double* model, double* inputk, int inputsDimension);
@@ -94,6 +108,55 @@ extern "C" {
 			}
 		}
 		return model;
+	}
+
+	__declspec(dllexport) RbfModel * createRbfModel(int nbInputs, double* inputs)
+	{
+		RbfModel * model = (RbfModel*)malloc(sizeof(RbfModel));
+		model->W = (double*) malloc(sizeof(double) * nbInputs);
+		model->nbInputs = nbInputs;
+		model->inputs = (double*) malloc(sizeof(double) * nbInputs);
+		memcpy(model->inputs, inputs, sizeof(double) * nbInputs);
+
+
+		for (int i = 0; i < nbInputs; i++) {
+			model->W[i] = randomDouble();
+		}
+
+		return model;
+	}
+
+	__declspec(dllexport) void trainRbf(RbfModel* model, double* expectedSigns) {
+		
+		MatrixXd Xmatrix(model->nbInputs, model->nbInputs);
+		MatrixXd YMatrix(model->nbInputs, 1);
+
+		for (int i = 0; i < model->nbInputs;i++) {
+			YMatrix(i, 0) = expectedSigns[i];
+
+			double sigma = 0;
+			Vector2d pointStart(model->inputs[i * 2], model->inputs[i * 2 + 1]);
+			for (int j = 0; j < model->nbInputs; j++) {
+				Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
+
+				Xmatrix(i, j) = exp((-model->gamma) * pow((pointStart - pointEnd).norm, 2));
+			}
+		}
+
+		MatrixXd newW = Xmatrix * YMatrix;
+		for (int i = 0; i < model->nbInputs; i++) {
+			model->W[i] = newW(i, 0);
+		}
+	}
+
+	double predictRbf(RbfModel * model, double * point) {
+		double sigma = 0;
+		Vector2d pointStart(point[0], point[1]);
+		for (int j = 0; j < model->nbInputs; j++) {
+			Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
+			sigma += model->W[j] * exp((-model->gamma) * pow((pointStart - pointEnd).norm,2));
+		}
+		return sigma;
 	}
 
 	__declspec(dllexport) void trainModelLinearClassification(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns, double learnStep, int nbIterations) {
