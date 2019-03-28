@@ -2,7 +2,7 @@
 
 namespace Assets
 {
-    public class RbfRegression : MonoBehaviour
+    public class RbfClassification : MonoBehaviour
     {
         [SerializeField]
         private double _gama = 0.01;
@@ -13,6 +13,9 @@ namespace Assets
             set => _gama = value;
         }
 
+        private void Start()
+        {
 
+        }
     }
 }
