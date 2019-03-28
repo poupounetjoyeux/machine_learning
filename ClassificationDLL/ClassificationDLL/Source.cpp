@@ -411,29 +411,29 @@ extern "C" {
 		Vector2d pointStart(inputk[0], inputk[1]);
 		for (int j = 0; j < model->nbInputs; j++) {
 			Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
-			sigma += model->W[j] * exp((-model->gamma) * pow((pointStart - pointEnd).norm, 2));
+			sigma += model->W[j] * exp((-model->gamma) * pow((pointStart - pointEnd).norm(), 2));
 		}
 		return sigma;
 	}
 
 	__declspec(dllexport) void trainRbfModelRegression(RbfModel* model, double* expectedSigns) {
 
-		MatrixXd Xmatrix(model->nbInputs, model->nbInputs);
-		MatrixXd YMatrix(model->nbInputs, 1);
+		MatrixXd xMatrix(model->nbInputs, model->nbInputs);
+		MatrixXd yMatrix(model->nbInputs, 1);
 
 		for (int i = 0; i < model->nbInputs; i++) {
-			YMatrix(i, 0) = expectedSigns[i];
+			yMatrix(i, 0) = expectedSigns[i];
 
 			double sigma = 0;
 			Vector2d pointStart(model->inputs[i * 2], model->inputs[i * 2 + 1]);
 			for (int j = 0; j < model->nbInputs; j++) {
 				Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
 
-				Xmatrix(i, j) = exp((-model->gamma) * pow((pointStart - pointEnd).norm, 2));
+				xMatrix(i, j) = exp((-model->gamma) * pow((pointStart - pointEnd).norm(), 2));
 			}
 		}
 
-		MatrixXd newW = Xmatrix * YMatrix;
+		MatrixXd newW = xMatrix * yMatrix;
 		for (int i = 0; i < model->nbInputs; i++) {
 			model->W[i] = newW(i, 0);
 		}
