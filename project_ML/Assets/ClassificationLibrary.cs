@@ -13,6 +13,9 @@ namespace Assets
         [DllImport("ClassificationDLL")]
         public static extern IntPtr createMultilayerModel(int[] nplParams, int nbLayer, double learnStep);
 
+        [DllImport("ClassificationDLL")]
+        public static extern IntPtr createRbfModel(int nbInputs, double[] inputs);
+
         #endregion
 
         #region Prediction
@@ -28,6 +31,9 @@ namespace Assets
 
         [DllImport("ClassificationDLL")]
         public static extern IntPtr predictMultilayerRegressionModel(IntPtr model, double[] inputk);
+
+        [DllImport("ClassificationDLL")]
+        public static extern double predictRbfModelRegression(IntPtr model, double[] inputk);
 
         #endregion
 
@@ -49,6 +55,9 @@ namespace Assets
         public static extern void trainModelMultilayerRegression(IntPtr model, double[] inputs,
             int nbInputs, double[] expectedSigns, int iterations);
 
+        [DllImport("ClassificationDLL")]
+        public static extern void trainRbfModelRegression(IntPtr model, double[] expectedSigns);
+
         #endregion
 
         #region Release
@@ -58,6 +67,9 @@ namespace Assets
 
         [DllImport("ClassificationDLL")]
         public static extern void releaseMultilayerModel(IntPtr model);
+
+        [DllImport("ClassificationDLL")]
+        public static extern void releaseRbfModel(IntPtr model);
 
         #endregion
     }
