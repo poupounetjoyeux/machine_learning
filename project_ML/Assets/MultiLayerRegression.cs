@@ -11,7 +11,7 @@ namespace Assets
         private GameObject[] _spheresPlan;
         private GameObject[] _spheres;
         private List<double> _inputs;
-        private IntPtr _model;
+        private IntPtr? _model;
         private double[] _expectedSigns;
 
         [SerializeField] private int[] _nplParams;
@@ -52,7 +52,7 @@ namespace Assets
 
             Debug.Log($"Sphere number : {_spheres.Length}");
             Debug.Log($"PlanSphere number : {_spheresPlan.Length}");
-            Debug.Log("Starting to call library for a LinearClassification");
+            Debug.Log("Starting to call library for a MultilayerLinearClassification");
 
             _model = ClassificationLibrary.createMultilayerModel(NplParams, NplParams.Length, LearnStep);
 
@@ -67,18 +67,18 @@ namespace Assets
 
         private void Update()
         {
-            if (!Input.GetKey(KeyCode.Space))
+            if (!Input.GetKey(KeyCode.Space) || !_model.HasValue)
             {
                 return;
             }
-            ClassificationLibrary.trainModelMultilayerRegression(_model, _inputs.ToArray(), _spheres.Length, _expectedSigns, Iterations);
+            ClassificationLibrary.trainModelMultilayerRegression(_model.Value, _inputs.ToArray(), _spheres.Length, _expectedSigns, Iterations);
 
             foreach (var sphere in _spheresPlan)
             {
                 var position = sphere.transform.position;
                 var point = new double[] { position.x, position.z };
                 var output = new double[NplParams[NplParams.Length - 1]];
-                var result = ClassificationLibrary.predictMultilayerRegressionModel(_model, point);
+                var result = ClassificationLibrary.predictMultilayerRegressionModel(_model.Value, point);
                 Marshal.Copy(result, output, 0, NplParams[NplParams.Length - 1]);
                 sphere.transform.position = new Vector3(position.x, (float)output[0], position.z);
             }
@@ -86,7 +86,10 @@ namespace Assets
 
         private void OnApplicationQuit()
         {
-            ClassificationLibrary.releaseMultilayerModel(_model);
+            if (_model.HasValue)
+            {
+                ClassificationLibrary.releaseMultilayerModel(_model.Value);
+            }
         }
     }
 }
