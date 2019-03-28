@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace Assets
 {
+    public enum CustomModeRegression
+    {
+        Default,
+        Circle,
+    }
+    
     public class LinearRegression : MonoBehaviour
     {
         private int _dimensions = 2;
@@ -12,9 +18,9 @@ namespace Assets
         private float _centerX;
 
         [SerializeField]
-        private CustomMode _mode = CustomMode.Default;
+        private CustomModeRegression _mode = CustomModeRegression.Default;
 
-        public CustomMode Mode
+        public CustomModeRegression Mode
         {
             get => _mode;
             set => _mode = value;
@@ -22,7 +28,6 @@ namespace Assets
         
         private void Start()
         {
-            _dimensions = _mode == CustomMode.Xor ? 1 : 2;
             var spheresPlan = GameObject.FindGameObjectsWithTag("plan");
             var spheres = GameObject.FindGameObjectsWithTag("sphere");
 
@@ -32,7 +37,7 @@ namespace Assets
 
             var model = ClassificationLibrary.createModel(_dimensions);
 
-            if (_mode == CustomMode.Circle)
+            if (_mode == CustomModeRegression.Circle)
             {
                 var allPointsWith1 = spheres.Where(sp => sp.transform.position.y > 0).ToList();
                 float totalX = 0, totalZ = 0;
@@ -46,20 +51,6 @@ namespace Assets
                 _centerZ = totalZ / allPointsWith1.Count;
             }
             
-            if (_mode == CustomMode.Xor)
-            {
-                var allPointsWith1 = spheresPlan;
-                float totalX = 0, totalZ = 0;
-                foreach (var p in allPointsWith1)
-                {
-                    var position = p.transform.position;
-                    totalX += position.x;
-                    totalZ += position.z;
-                }
-                _centerX = totalX / allPointsWith1.Length;
-                _centerZ = totalZ / allPointsWith1.Length;
-            }
-            
             Debug.Log("Found center at X = "+_centerX+" | Z = "+_centerZ);
             
             var expectedSigns = spheres.Select(sp => (double)sp.transform.position.y).ToArray();
@@ -67,16 +58,8 @@ namespace Assets
             foreach (var sphere in spheres)
             {
                 var position = sphere.transform.position;
-                if (_mode != CustomMode.Xor)
-                {
-                    inputs.Add(MapPositionX(position.x));
-                    inputs.Add(MapPositionZ(position.z));   
-                }
-                else
-                {
-                    inputs.Add(MapPositionX(position.x) * MapPositionZ(position.z));
-                    Debug.Log("Checking for point X = "+MapPositionX(position.x)+" | Z = "+MapPositionZ(position.z));
-                }
+                inputs.Add(MapPositionX(position.x));
+                inputs.Add(MapPositionZ(position.z));   
             }
 
             ClassificationLibrary.trainModelLinearRegression(model, inputs.ToArray(), _dimensions, spheres.Length, expectedSigns);
@@ -84,7 +67,7 @@ namespace Assets
             foreach (var sphere in spheresPlan)
             {
                 var position = sphere.transform.position;
-                var point = _mode != CustomMode.Xor ? new[] {MapPositionX(position.x), MapPositionZ(position.z)} : new[] {MapPositionX(position.x) * MapPositionZ(position.z)};
+                var point = new[] {MapPositionX(position.x), MapPositionZ(position.z)};
                 
                 var newY = ClassificationLibrary.predictRegressionModel(model, point, _dimensions);
                 sphere.transform.position = new Vector3(position.x, (float)newY, position.z);
@@ -97,11 +80,9 @@ namespace Assets
         {
             switch (_mode)
             {
-                case CustomMode.Xor:
-                    return x - _centerX;
-                case CustomMode.Default:
+                case CustomModeRegression.Default:
                     return x;
-                case CustomMode.Circle:
+                case CustomModeRegression.Circle:
                     return Math.Pow(x - _centerX, 2);
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -113,11 +94,9 @@ namespace Assets
         {
             switch (_mode)
             {
-                case CustomMode.Xor:
-                    return z - _centerZ;
-                case CustomMode.Default:
+                case CustomModeRegression.Default:
                     return z;
-                case CustomMode.Circle:
+                case CustomModeRegression.Circle:
                     return Math.Pow(z - _centerZ, 2);
                 default:
                     throw new ArgumentOutOfRangeException();

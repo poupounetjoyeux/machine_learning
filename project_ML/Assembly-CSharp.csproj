@@ -54,7 +54,6 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\ClassificationLibrary.cs" />
-     <Compile Include="Assets\CustomMode.cs" />
      <Compile Include="Assets\LinearClassification.cs" />
      <Compile Include="Assets\LinearRegression.cs" />
      <Compile Include="Assets\MultiLayerClassification.cs" />

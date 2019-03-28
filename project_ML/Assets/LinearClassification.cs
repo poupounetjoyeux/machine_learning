@@ -5,7 +5,14 @@ using UnityEngine;
 
 namespace Assets
 {
-   
+    public enum CustomModeClassification
+    {
+        Default,
+        Circle,
+        Xor,
+        Cross,
+    }
+    
     public class LinearClassification : MonoBehaviour
     {
         private int _dimensions = 2;
@@ -29,9 +36,9 @@ namespace Assets
         }
 
         [SerializeField]
-        private CustomMode _mode = CustomMode.Default;
+        private CustomModeClassification _mode = CustomModeClassification.Default;
 
-        public CustomMode Mode
+        public CustomModeClassification Mode
         {
             get => _mode;
             set => _mode = value;
@@ -48,7 +55,7 @@ namespace Assets
 
         private void Start()
         {
-            _dimensions = _mode == CustomMode.Xor || _mode == CustomMode.Cross ? 1 : 2;
+            _dimensions = _mode == CustomModeClassification.Xor || _mode == CustomModeClassification.Cross ? 1 : 2;
             _spheresPlan = GameObject.FindGameObjectsWithTag("plan");
             _spheres = GameObject.FindGameObjectsWithTag("sphere");
 
@@ -58,7 +65,7 @@ namespace Assets
 
             _model = ClassificationLibrary.createModel(_dimensions);
 
-            if (Mode == CustomMode.Circle)
+            if (Mode == CustomModeClassification.Circle)
             {
                 var allPointsWith1 = _spheres.Where(sp => sp.transform.position.y > 0).ToList();
                 float totalX = 0, totalZ = 0;
@@ -72,21 +79,21 @@ namespace Assets
                 _centerZ = totalZ / allPointsWith1.Count;
             }
 
-            if (Mode == CustomMode.Xor || Mode == CustomMode.Cross)
+            if (Mode == CustomModeClassification.Xor || Mode == CustomModeClassification.Cross)
             {
-                var allPointsWith1 = _spheresPlan;
+                var allPoints = _spheresPlan;
                 float totalX = 0, totalZ = 0;
-                foreach (var p in allPointsWith1)
+                foreach (var p in allPoints)
                 {
                     var position = p.transform.position;
                     totalX += position.x;
                     totalZ += position.z;
                 }
-                _centerX = totalX / allPointsWith1.Length;
-                _centerZ = totalZ / allPointsWith1.Length;
+                _centerX = totalX / allPoints.Length;
+                _centerZ = totalZ / allPoints.Length;
             }
 
-            if (Mode == CustomMode.Cross)
+            if (Mode == CustomModeClassification.Cross)
             {
                 var allPointsWith1 = _spheres.Where(sp => sp.transform.position.y > 0).ToList();
                 foreach (var p in allPointsWith1)
@@ -114,11 +121,11 @@ namespace Assets
             foreach (var sphere in _spheres)
             {
                 var position = sphere.transform.position;
-                if (Mode == CustomMode.Xor)
+                if (Mode == CustomModeClassification.Xor)
                 {
                     _inputs.Add(MapPositionX(position.x) * MapPositionZ(position.z));
                 }
-                else if (Mode == CustomMode.Cross)
+                else if (Mode == CustomModeClassification.Cross)
                 {
                     var posX = Math.Abs(position.x - _centerX);
                     var posZ = Math.Abs(position.z - _centerZ);
@@ -140,11 +147,11 @@ namespace Assets
         {
             switch (Mode)
             {
-                case CustomMode.Xor:
+                case CustomModeClassification.Xor:
                     return x - _centerX;
-                case CustomMode.Default:
+                case CustomModeClassification.Default:
                     return x;
-                case CustomMode.Circle:
+                case CustomModeClassification.Circle:
                     return Math.Pow(x - _centerX, 2);
                 default:
                     return x;
@@ -155,11 +162,11 @@ namespace Assets
         {
             switch (Mode)
             {
-                case CustomMode.Xor:
+                case CustomModeClassification.Xor:
                     return z - _centerZ;
-                case CustomMode.Default:
+                case CustomModeClassification.Default:
                     return z;
-                case CustomMode.Circle:
+                case CustomModeClassification.Circle:
                     return Math.Pow(z - _centerZ, 2);
                 default:
                     return z;
@@ -178,12 +185,12 @@ namespace Assets
             {
                 var position = sphere.transform.position;
                 double[] point;
-                if (Mode == CustomMode.Xor)
+                if (Mode == CustomModeClassification.Xor)
                 {
                     point = new[] {MapPositionX(position.x) * MapPositionZ(position.z)};
                     
                 }
-                else if (Mode == CustomMode.Cross)
+                else if (Mode == CustomModeClassification.Cross)
                 {
                     var posX = Math.Abs(position.x - _centerX);
                     var posZ = Math.Abs(position.z - _centerZ);
