@@ -25,6 +25,7 @@ extern "C" {
 	void calculateClassificationDeltas(MultiLayerModel* model, double* expectedSigns);
 
 	void retropropagateLayersRegression(MultiLayerModel* model, double* expectedSigns);
+	void calculateRegressionDeltas(MultiLayerModel* model, double* expectedSigns);
 
 	void retropropagateModel(MultiLayerModel* model);
 	void processPredictLayers(MultiLayerModel* model, double* inputk, bool isRegression);
