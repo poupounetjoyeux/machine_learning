@@ -142,7 +142,7 @@ extern "C" {
 		{
 			for (int input = 0; input < nbInputs; input++)
 			{
-				processPredictLayers(model, inputs + (input * model->nplParams[0]), false);
+				predictMultilayerClassificationModel(model, inputs + (input * model->nplParams[0]), new double[1]);
 				retropropagateLayersClassification(model, expectedSigns + (input * model->nplParams[model->nbLayers - 1]));
 			}
 		}
@@ -153,7 +153,7 @@ extern "C" {
 		{
 			for (int input = 0; input < nbInputs; input++)
 			{
-				processPredictLayers(model, inputs + (input * model->nplParams[0]), true);
+				predictMultilayerRegressionModel(model, inputs + (input * model->nplParams[0]), new double[1]);
 				retropropagateLayersRegression(model, expectedSigns + (input * model->nplParams[model->nbLayers - 1]));
 			}
 		}
@@ -165,10 +165,8 @@ extern "C" {
 	}
 
 	void retropropagateLayersRegression(MultiLayerModel* model, double* expectedSigns) {
-		for (int lastNeurone = 0; lastNeurone < model->nplParams[model->nbLayers - 1]; lastNeurone++)
-		{
-			model->deltas[model->nbLayers - 2][lastNeurone] = (model->neuronesResults[model->nbLayers - 1][lastNeurone] - expectedSigns[lastNeurone]);
-		}
+		
+		calculateRegressionDeltas(model, expectedSigns);
 		retropropagateModel(model);
 	}
 
@@ -177,6 +175,26 @@ extern "C" {
 		for (int lastNeurone = 0; lastNeurone < model->nplParams[model->nbLayers - 1]; lastNeurone++)
 		{
 			model->deltas[model->nbLayers - 2][lastNeurone] = (1 - pow(model->neuronesResults[model->nbLayers - 1][lastNeurone], 2)) * (model->neuronesResults[model->nbLayers - 1][lastNeurone] - expectedSigns[lastNeurone]);
+		}
+		for (int layer = model->nbLayers - 2; layer > 0; layer--)
+		{
+			for (int neur = 0; neur < model->nplParams[layer] + 1; neur++)
+			{
+				double sigma = 0.0;
+				for (int nextNeur = 0; nextNeur < model->nplParams[layer + 1]; nextNeur++)
+				{
+					sigma += model->w[layer][neur][nextNeur] * model->deltas[layer][nextNeur];
+				}
+				model->deltas[layer - 1][neur] = (1 - pow(model->neuronesResults[layer][neur], 2)) * sigma;
+			}
+		}
+	}
+
+	void calculateRegressionDeltas(MultiLayerModel* model, double* expectedSigns)
+	{
+		for (int lastNeurone = 0; lastNeurone < model->nplParams[model->nbLayers - 1]; lastNeurone++)
+		{
+			model->deltas[model->nbLayers - 2][lastNeurone] = (model->neuronesResults[model->nbLayers - 1][lastNeurone] - expectedSigns[lastNeurone]);
 		}
 		for (int layer = model->nbLayers - 2; layer > 0; layer--)
 		{
