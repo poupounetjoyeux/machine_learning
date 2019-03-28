@@ -407,7 +407,7 @@ extern "C" {
 			Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
 			sigma += model->w[j] * exp(-model->gamma * (pointStart - pointEnd).squaredNorm());
 		}
-		return signOf(sigma);
+		return signOf(sigma);
 	}
 
 	__declspec(dllexport) void trainRbfModelClassification(RbfModel* model, int* expectedSigns) {

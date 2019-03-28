@@ -43,6 +43,12 @@ namespace Assets
                 var point = new double[] { position.x, position.z };
 
                 var newY = ClassificationLibrary.predictRbfModelClassification(model, point);
+                if (double.IsNaN(newY))
+                {
+                    ClassificationLibrary.releaseRbfModel(model);
+                    Debug.LogError("It seems that some ofe exemples inputs are in collision");
+                    return;
+                }
                 sphere.transform.position = new Vector3(position.x, newY, position.z);
             }
 
