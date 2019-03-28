@@ -56,6 +56,7 @@
      <Compile Include="Assets\ClassificationLibrary.cs" />
      <Compile Include="Assets\LinearClassification.cs" />
      <Compile Include="Assets\LinearRegression.cs" />
+     <Compile Include="Assets\MultilayerMode.cs" />
      <Compile Include="Assets\MultiLayerClassification.cs" />
      <Compile Include="Assets\MultiLayerRegression.cs" />
  <Reference Include="Unity.TextMeshPro.Editor">

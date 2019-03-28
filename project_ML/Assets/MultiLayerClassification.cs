@@ -15,6 +15,15 @@ namespace Assets
         private int[] _expectedSigns;
 
         [SerializeField]
+        private MultilayerMode _mode = MultilayerMode.yPosition;
+
+        public MultilayerMode Mode
+        {
+            get => _mode;
+            set => _mode = value;
+        }
+        
+        [SerializeField]
         private int[] _nplParams;
 
         public int[] NplParams
@@ -57,13 +66,30 @@ namespace Assets
             
             _model = ClassificationLibrary.createMultilayerModel(NplParams, NplParams.Length, LearnStep);
 
-            _expectedSigns = _spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1).ToArray();
+            
             _inputs = new List<double>();
+
+            var _expectedSignsList = new List<int>();
+
+            if (Mode == MultilayerMode.yPosition)
+            {
+                _expectedSignsList = _spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1).ToList();    
+            }
+
             foreach (var sphere in _spheres)
             {
+                
                 _inputs.Add(sphere.transform.position.x);
                 _inputs.Add(sphere.transform.position.z);
+                if (Mode == MultilayerMode.Color)
+                {
+                    var color = sphere.GetComponent<Renderer>().material.color;
+                    _expectedSignsList.Add(color.r > 0 ? 1 : -1);
+                    _expectedSignsList.Add(color.g > 0 ? 1 : -1);
+                    _expectedSignsList.Add(color.b > 0 ? 1 : -1);
+                }
             }
+            _expectedSigns = _expectedSignsList.ToArray();
         }
 
         private void Update()
@@ -81,8 +107,16 @@ namespace Assets
                 var output = new double[NplParams[NplParams.Length - 1]];
                 var result =  ClassificationLibrary.predictMultilayerClassificationModel(_model.Value, point);
                 Marshal.Copy(result, output, 0, NplParams[NplParams.Length - 1]);
-
-                sphere.transform.position = new Vector3(position.x, (float)output[0], position.z);
+                if (Mode == MultilayerMode.yPosition)
+                {
+                    sphere.transform.position = new Vector3(position.x, (float)output[0], position.z);    
+                }
+                else
+                {
+                    sphere.GetComponent<Renderer>().material.color =
+                        new Color((float) output[0], (float) output[1], (float) output[2]);
+                }
+                
             }
         }
 
