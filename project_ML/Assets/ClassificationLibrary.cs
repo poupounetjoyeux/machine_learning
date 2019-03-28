@@ -14,7 +14,7 @@ namespace Assets
         public static extern IntPtr createMultilayerModel(int[] nplParams, int nbLayer, double learnStep);
 
         [DllImport("ClassificationDLL")]
-        public static extern IntPtr createRbfModel(int nbInputs, double[] inputs);
+        public static extern IntPtr createRbfModel(int nbInputs, double[] inputs, double gamma);
 
         #endregion
 

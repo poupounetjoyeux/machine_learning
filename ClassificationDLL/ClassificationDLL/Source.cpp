@@ -107,9 +107,6 @@ extern "C" {
 
 		for (int i = 0; i < nbInputs; i++) {
 			yMatrix(i, 0) = expectedSigns[i];
-		}
-
-		for (int i = 0; i < nbInputs; i++) {
 			xMatrix(i, 0) = 1.0;
 			for (int j = 0; j < inputsDimension; j++) {
 				xMatrix(i, j + 1) = inputs[(i * 2) + j];
@@ -360,7 +357,7 @@ extern "C" {
 	#pragma region Base
 
 	typedef struct RbfModel {
-		double * W;
+		double * w;
 		double * inputs;
 
 		int nbInputs;
@@ -369,20 +366,21 @@ extern "C" {
 		double gamma;
 	};
 
-	__declspec(dllexport) RbfModel* createRbfModel(int nbInputs, double* inputs);
+	__declspec(dllexport) RbfModel* createRbfModel(int nbInputs, double* inputs, double gamma);
 	__declspec(dllexport) void releaseRbfModel(RbfModel* model);
 
-	__declspec(dllexport) RbfModel * createRbfModel(int nbInputs, double* inputs)
+	__declspec(dllexport) RbfModel * createRbfModel(int nbInputs, double* inputs, double gamma)
 	{
-		RbfModel * model = (RbfModel*)malloc(sizeof(RbfModel));
-		model->W = (double*)malloc(sizeof(double) * nbInputs);
+		srand(time(nullptr));
+		RbfModel* model = (RbfModel*)malloc(sizeof(RbfModel));
+		model->w = (double*)malloc(sizeof(double) * nbInputs);
 		model->nbInputs = nbInputs;
+		model->gamma = gamma;
 		model->inputs = (double*)malloc(sizeof(double) * nbInputs);
 		memcpy(model->inputs, inputs, sizeof(double) * nbInputs);
 
-
 		for (int i = 0; i < nbInputs; i++) {
-			model->W[i] = randomDouble();
+			model->w[i] = randomDouble();
 		}
 
 		return model;
@@ -390,7 +388,7 @@ extern "C" {
 
 	__declspec(dllexport) void releaseRbfModel(RbfModel* model)
 	{
-		free(model->W);
+		free(model->w);
 		free(model->inputs);
 		free(model);
 	}
@@ -411,7 +409,7 @@ extern "C" {
 		Vector2d pointStart(inputk[0], inputk[1]);
 		for (int j = 0; j < model->nbInputs; j++) {
 			Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
-			sigma += model->W[j] * exp((-model->gamma) * pow((pointStart - pointEnd).norm(), 2));
+			sigma += model->w[j] * exp(-model->gamma * pow((pointStart.norm() - pointEnd.norm()), 2));
 		}
 		return sigma;
 	}
@@ -423,19 +421,22 @@ extern "C" {
 
 		for (int i = 0; i < model->nbInputs; i++) {
 			yMatrix(i, 0) = expectedSigns[i];
-
-			double sigma = 0;
 			Vector2d pointStart(model->inputs[i * 2], model->inputs[i * 2 + 1]);
 			for (int j = 0; j < model->nbInputs; j++) {
 				Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
-
-				xMatrix(i, j) = exp((-model->gamma) * pow((pointStart - pointEnd).norm(), 2));
+				xMatrix(i, j) = exp(-model->gamma * pow((pointStart.norm() - pointEnd.norm()), 2));
 			}
 		}
 
-		MatrixXd newW = xMatrix * yMatrix;
+		FullPivLU<MatrixXd> lu(xMatrix);
+		if (!lu.isInvertible())
+		{
+			xMatrix(0, 0) = xMatrix(0, 0) + 0.001;
+		}
+
+		MatrixXd result = xMatrix.inverse() * yMatrix;
 		for (int i = 0; i < model->nbInputs; i++) {
-			model->W[i] = newW(i, 0);
+			model->w[i] = result(i, 0);
 		}
 	}
 

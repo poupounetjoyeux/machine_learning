@@ -7,12 +7,12 @@ namespace Assets
     public class RbfRegression : MonoBehaviour
     {
         [SerializeField]
-        private double _gama = 0.01;
+        private double _gamma = 0.01;
 
-        public double Gama
+        public double Gamma
         {
-            get => _gama;
-            set => _gama = value;
+            get => _gamma;
+            set => _gamma = value;
         }
 
         private void Start()
@@ -34,7 +34,7 @@ namespace Assets
             }
 
 
-            var model = ClassificationLibrary.createRbfModel(spheres.Length, inputs.ToArray());
+            var model = ClassificationLibrary.createRbfModel(spheres.Length, inputs.ToArray(), Gamma);
             ClassificationLibrary.trainRbfModelRegression(model, expectedSigns);
 
             foreach (var sphere in spheresPlan)
