@@ -14,7 +14,8 @@ namespace Assets
         private IntPtr _model;
         private int[] _expectedSigns;
 
-        [SerializeField] private int[] _nplParams = {2, 1};
+        [SerializeField]
+        private int[] _nplParams;
 
         public int[] NplParams
         {
@@ -42,6 +43,11 @@ namespace Assets
 
         private void Start()
         {
+            if (NplParams.Length == 0)
+            {
+                Debug.LogError("You need to have at least 2 layers in you NPL Params");
+                Application.Quit();
+            }
             _spheresPlan = GameObject.FindGameObjectsWithTag("plan");
             _spheres = GameObject.FindGameObjectsWithTag("sphere");
 
