@@ -59,6 +59,8 @@
      <Compile Include="Assets\MultilayerMode.cs" />
      <Compile Include="Assets\MultiLayerClassification.cs" />
      <Compile Include="Assets\MultiLayerRegression.cs" />
+     <Compile Include="Assets\RbfClassification.cs" />
+     <Compile Include="Assets\RbfRegression.cs" />
  <Reference Include="Unity.TextMeshPro.Editor">
  <HintPath>C:/Users/poupo/Desktop/machine_learning/project_ML/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
  </Reference>

@@ -10,7 +10,7 @@ namespace Assets
         Default,
         Circle,
         Xor,
-        Cross,
+        Cross
     }
     
     public class LinearClassification : MonoBehaviour
@@ -24,7 +24,7 @@ namespace Assets
         private int[] _expectedSigns;
         private float _centerZ;
         private float _centerX;
-        private float _maxDistanceToAxis = 0;
+        private float _maxDistanceToAxis;
 
         [SerializeField]
         private int _numberOfIterations = 1;
@@ -110,8 +110,6 @@ namespace Assets
                         _maxDistanceToAxis = distance;
                     }
                 }
-                
-                Debug.Log("_maxDistanceToAxis = "+_maxDistanceToAxis);
             }
             
             Debug.Log("Found center at X = "+_centerX+" | Z = "+_centerZ);
@@ -133,7 +131,6 @@ namespace Assets
                     var min = Math.Min(posX, posZ);
                     var abs = Math.Abs(min) - _maxDistanceToAxis;
                     _inputs.Add(abs);
-                    //Debug.Log("Sphere = X= " + (posX) + " | Z=" + (posZ) + " | abs=" +abs);
                 }
                 else
                 {

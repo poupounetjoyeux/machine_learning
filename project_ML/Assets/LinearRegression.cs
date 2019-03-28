@@ -8,12 +8,12 @@ namespace Assets
     public enum CustomModeRegression
     {
         Default,
-        Circle,
+        Circle
     }
     
     public class LinearRegression : MonoBehaviour
     {
-        private int _dimensions = 2;
+        private const int Dimensions = 2;
         private float _centerZ;
         private float _centerX;
 
@@ -35,9 +35,9 @@ namespace Assets
             Debug.Log($"PlanSphere number : {spheresPlan.Length}");
             Debug.Log("Starting to call library for a LinearRegression");
 
-            var model = ClassificationLibrary.createModel(_dimensions);
+            var model = ClassificationLibrary.createModel(Dimensions);
 
-            if (_mode == CustomModeRegression.Circle)
+            if (Mode == CustomModeRegression.Circle)
             {
                 var allPointsWith1 = spheres.Where(sp => sp.transform.position.y > 0).ToList();
                 float totalX = 0, totalZ = 0;
@@ -62,14 +62,14 @@ namespace Assets
                 inputs.Add(MapPositionZ(position.z));   
             }
 
-            ClassificationLibrary.trainModelLinearRegression(model, inputs.ToArray(), _dimensions, spheres.Length, expectedSigns);
+            ClassificationLibrary.trainModelLinearRegression(model, inputs.ToArray(), Dimensions, spheres.Length, expectedSigns);
 
             foreach (var sphere in spheresPlan)
             {
                 var position = sphere.transform.position;
                 var point = new[] {MapPositionX(position.x), MapPositionZ(position.z)};
                 
-                var newY = ClassificationLibrary.predictRegressionModel(model, point, _dimensions);
+                var newY = ClassificationLibrary.predictRegressionModel(model, point, Dimensions);
                 sphere.transform.position = new Vector3(position.x, (float)newY, position.z);
             }
 
@@ -78,7 +78,7 @@ namespace Assets
         
         private double MapPositionX(double x)
         {
-            switch (_mode)
+            switch (Mode)
             {
                 case CustomModeRegression.Default:
                     return x;
@@ -92,7 +92,7 @@ namespace Assets
         
         private double MapPositionZ(double z)
         {
-            switch (_mode)
+            switch (Mode)
             {
                 case CustomModeRegression.Default:
                     return z;
