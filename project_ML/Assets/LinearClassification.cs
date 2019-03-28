@@ -8,13 +8,15 @@ namespace Assets
    
     public class LinearClassification : MonoBehaviour
     {
-        public int dimensions = 2;
+        public const int Dimensions = 2;
         
         private GameObject[] _spheresPlan;
         private GameObject[] _spheres;
         private List<double> _inputs;
         private IntPtr _model;
-        private IEnumerable<int> _expectedSigns;
+        private int[] _expectedSigns;
+        private float _centerZ;
+        private float _centerX;
 
         [SerializeField]
         private int _numberOfIterations = 1;
@@ -26,11 +28,16 @@ namespace Assets
         }
 
         [SerializeField]
-        private double _learnStep = 0.001;
+        private CustomMode _mode = CustomMode.Default;
 
-        public CustomMode mode = CustomMode.Default;
-        private float centerZ;
-        private float centerX;
+        public CustomMode Mode
+        {
+            get => _mode;
+            set => _mode = value;
+        }
+
+        [SerializeField]
+        private double _learnStep = 0.001;
 
         public double LearnStep
         {
@@ -47,9 +54,9 @@ namespace Assets
             Debug.Log($"PlanSphere number : {_spheresPlan.Length}");
             Debug.Log("Starting to call library for a LinearClassification");
 
-            _model = ClassificationLibrary.createModel(dimensions);
+            _model = ClassificationLibrary.createModel(Dimensions);
 
-            if (mode == CustomMode.Circle)
+            if (Mode == CustomMode.Circle)
             {
                 var allPointsWith1 = _spheres.Where(sp => sp.transform.position.y > 0).ToList();
                 float totalX = 0, totalZ = 0;
@@ -59,11 +66,11 @@ namespace Assets
                     totalX += position.x;
                     totalZ += position.z;
                 }
-                centerX = totalX / allPointsWith1.Count();
-                centerZ = totalZ / allPointsWith1.Count();
+                _centerX = totalX / allPointsWith1.Count();
+                _centerZ = totalZ / allPointsWith1.Count();
             }
 
-            if (mode == CustomMode.Xor)
+            if (Mode == CustomMode.Xor)
             {
                 var allPointsWith1 = _spheresPlan;
                 float totalX = 0, totalZ = 0;
@@ -73,56 +80,56 @@ namespace Assets
                     totalX += position.x;
                     totalZ += position.z;
                 }
-                centerX = totalX / allPointsWith1.Count();
-                centerZ = totalZ / allPointsWith1.Count();
+                _centerX = totalX / allPointsWith1.Count();
+                _centerZ = totalZ / allPointsWith1.Count();
             }
             
 
-            Debug.Log("Found center at X = "+centerX+" | Z = "+centerZ);
+            Debug.Log("Found center at X = "+_centerX+" | Z = "+_centerZ);
             
-            _expectedSigns = _spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1);
+            _expectedSigns = _spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1).ToArray();
             _inputs = new List<double>();
             foreach (var sphere in _spheres)
             {
                 var position = sphere.transform.position;
-                if (mode != CustomMode.Xor)
+                if (Mode != CustomMode.Xor)
                 {
-                    _inputs.Add(mapPositionX(position.x));
-                    _inputs.Add(mapPositionZ(position.z));   
+                    _inputs.Add(MapPositionX(position.x));
+                    _inputs.Add(MapPositionZ(position.z));   
                 }
                 else
                 {
-                    _inputs.Add(mapPositionX(position.x) * mapPositionZ(position.z));
+                    _inputs.Add(MapPositionX(position.x) * MapPositionZ(position.z));
                 }
             }
         }
 
-        private double mapPositionX(double x)
+        private double MapPositionX(double x)
         {
-            switch (mode)
+            switch (Mode)
             {
                 case CustomMode.Xor:
-                    return x - centerX;
+                    return x - _centerX;
                 case CustomMode.Default:
                     return x;
                 case CustomMode.Circle:
-                    return Math.Pow(x - centerX, 2);
+                    return Math.Pow(x - _centerX, 2);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
             
         }
         
-        private double mapPositionZ(double z)
+        private double MapPositionZ(double z)
         {
-            switch (mode)
+            switch (Mode)
             {
                 case CustomMode.Xor:
-                    return z - centerZ;
+                    return z - _centerZ;
                 case CustomMode.Default:
                     return z;
                 case CustomMode.Circle:
-                    return Math.Pow(z - centerZ, 2);
+                    return Math.Pow(z - _centerZ, 2);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -134,22 +141,14 @@ namespace Assets
             {
                 return;
             }
-            ClassificationLibrary.trainModelLinearClassification(_model, _inputs.ToArray(), dimensions, _spheres.Length, _expectedSigns.ToArray(), LearnStep, NumberOfIterations);
+            ClassificationLibrary.trainModelLinearClassification(_model, _inputs.ToArray(), Dimensions, _spheres.Length, _expectedSigns, LearnStep, NumberOfIterations);
 
             foreach (var sphere in _spheresPlan)
             {
                 var position = sphere.transform.position;
-                double[] point;
-                if (mode != CustomMode.Xor)
-                {
-                    point = new double[] {mapPositionX(position.x), mapPositionZ(position.z)};    
-                }
-                else
-                {
-                    point = new double[] {mapPositionX(position.x) * mapPositionZ(position.z)};
-                }
+                var point = Mode != CustomMode.Xor ? new[] {MapPositionX(position.x), MapPositionZ(position.z)} : new[] {MapPositionX(position.x) * MapPositionZ(position.z)};
 
-                var newY = ClassificationLibrary.predictClassificationModel(_model, point, dimensions);
+                var newY = ClassificationLibrary.predictClassificationModel(_model, point, Dimensions);
                 sphere.transform.position = new Vector3(position.x, newY, position.z);
             }
         }

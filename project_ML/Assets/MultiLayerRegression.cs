@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace Assets
@@ -13,10 +14,9 @@ namespace Assets
         private IntPtr _model;
         private double[] _expectedSigns;
 
-        [SerializeField]
-        private string _nplParams = "2;1";
+        [SerializeField] private int[] _nplParams = {2, 1};
 
-        public string NplParams
+        public int[] NplParams
         {
             get => _nplParams;
             set => _nplParams = value;
@@ -42,9 +42,6 @@ namespace Assets
 
         private void Start()
         {
-            var superParam = NplParams.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse)
-                .ToArray();
-
             _spheresPlan = GameObject.FindGameObjectsWithTag("plan");
             _spheres = GameObject.FindGameObjectsWithTag("sphere");
 
@@ -52,7 +49,7 @@ namespace Assets
             Debug.Log($"PlanSphere number : {_spheresPlan.Length}");
             Debug.Log("Starting to call library for a LinearClassification");
 
-            _model = ClassificationLibrary.createMultilayerModel(superParam, superParam.Length, LearnStep);
+            _model = ClassificationLibrary.createMultilayerModel(NplParams, NplParams.Length, LearnStep);
 
             _expectedSigns = _spheres.Select(sp => (double)sp.transform.position.y).ToArray();
             _inputs = new List<double>();
@@ -75,8 +72,9 @@ namespace Assets
             {
                 var position = sphere.transform.position;
                 var point = new double[] { position.x, position.z };
-                var output = new double[1];
-                ClassificationLibrary.predictMultilayerRegressionModel(_model, point, output);
+                var output = new double[NplParams[NplParams.Length - 1]];
+                var result = ClassificationLibrary.predictMultilayerRegressionModel(_model, point);
+                Marshal.Copy(result, output, 0, NplParams[NplParams.Length - 1]);
                 sphere.transform.position = new Vector3(position.x, (float)output[0], position.z);
             }
         }

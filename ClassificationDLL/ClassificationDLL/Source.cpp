@@ -21,8 +21,8 @@ extern "C" {
 	int signOf(double number);
 	double randomDouble();
 
-	void retropropagateLayersClassification(MultiLayerModel* model, double* expectedSigns);
-	void calculateClassificationDeltas(MultiLayerModel* model, double* expectedSigns);
+	void retropropagateLayersClassification(MultiLayerModel* model, int* expectedSigns);
+	void calculateClassificationDeltas(MultiLayerModel* model, int* expectedSigns);
 
 	void retropropagateLayersRegression(MultiLayerModel* model, double* expectedSigns);
 	void calculateRegressionDeltas(MultiLayerModel* model, double* expectedSigns);
@@ -36,19 +36,20 @@ extern "C" {
 	__declspec(dllexport) void trainModelLinearClassification(double* model, double* inputs, int inputsDimension, int nbInputs, int* expectedSigns, double learnStep, int nbIterations);
 	__declspec(dllexport) void trainModelLinearRegression(double* model, double* inputs, int inputsDimension, int nbInputs, double* expectedSigns);
 	
-	__declspec(dllexport) void trainModelMultilayerClassification(MultiLayerModel* model, double* inputs, int nbInputs, double* expectedSigns, int iterations);
+	__declspec(dllexport) void trainModelMultilayerClassification(MultiLayerModel* model, double* inputs, int nbInputs, int* expectedSigns, int iterations);
 	__declspec(dllexport) void trainModelMultilayerRegression(MultiLayerModel* model, double* inputs, int nbInputs, double* expectedSigns, int iterations);
 	
 	__declspec(dllexport) int predictClassificationModel(double* model, double* inputk, int inputsDimension);
 	__declspec(dllexport) double predictRegressionModel(double* model, double* inputk, int inputsDimension);
 	
-	__declspec(dllexport) void predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk, double* outputk);
-	__declspec(dllexport) void predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk, double* outputk);
+	__declspec(dllexport) double*  predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk);
+	__declspec(dllexport) double*  predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk);
 	
 	__declspec(dllexport) void releaseModel(double* model);
 	__declspec(dllexport) void releaseMultilayerModel(MultiLayerModel* model);
 	
 	__declspec(dllexport) double* createModel(int inputsDimension) {
+		srand(time(nullptr));
 		double *arr = (double*)malloc(sizeof(double)*inputsDimension + 1);
 		
 		
@@ -59,9 +60,8 @@ extern "C" {
 		return arr;
 	}
 
-
-
 	__declspec(dllexport) MultiLayerModel* createMultilayerModel(int* nplParams, int nbLayer, double learnStep) {
+		srand(time(nullptr));
 		MultiLayerModel *model = (MultiLayerModel*)malloc(sizeof(MultiLayerModel));
 		model->nplParams = (int*)malloc(sizeof(int) * nbLayer);
 		memcpy(model->nplParams, nplParams, sizeof(int) * nbLayer);
@@ -80,12 +80,12 @@ extern "C" {
 			//Add biais
 			model->neuronesResults[i + 1][nplParams[i + 1]] = 1;
 
-			model->deltas[i] = (double *)malloc(sizeof(double) * (nplParams[i + 1] + 1));
+			model->deltas[i] = (double *)malloc(sizeof(double) * nplParams[i + 1]);
 			model->w[i] = (double **)malloc(sizeof(double*) * (nplParams[i] + 1));
 			for (int j = 0; j < nplParams[i] + 1; j++)
 			{
-				model->w[i][j] = (double*)malloc(sizeof(double) * (nplParams[i + 1] + 1));
-				for (int k = 0; k < nplParams[i + 1] + 1; k++)
+				model->w[i][j] = (double*)malloc(sizeof(double) * nplParams[i + 1]);
+				for (int k = 0; k < nplParams[i + 1]; k++)
 				{
 					model->w[i][j][k] = randomDouble();
 				}
@@ -138,12 +138,12 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) void trainModelMultilayerClassification(MultiLayerModel* model, double* inputs, int nbInputs, double* expectedSigns, int iterations) {
+	__declspec(dllexport) void trainModelMultilayerClassification(MultiLayerModel* model, double* inputs, int nbInputs, int* expectedSigns, int iterations) {
 		for (int i = 0; i < iterations; i++)
 		{
 			for (int input = 0; input < nbInputs; input++)
 			{
-				predictMultilayerClassificationModel(model, inputs + (input * model->nplParams[0]), new double[1]);
+				processPredictLayers(model, inputs + (input * model->nplParams[0]), false);
 				retropropagateLayersClassification(model, expectedSigns + (input * model->nplParams[model->nbLayers - 1]));
 			}
 		}
@@ -154,13 +154,13 @@ extern "C" {
 		{
 			for (int input = 0; input < nbInputs; input++)
 			{
-				predictMultilayerRegressionModel(model, inputs + (input * model->nplParams[0]), new double[1]);
+				processPredictLayers(model, inputs + (input * model->nplParams[0]), true);
 				retropropagateLayersRegression(model, expectedSigns + (input * model->nplParams[model->nbLayers - 1]));
 			}
 		}
 	}
 
-	void retropropagateLayersClassification(MultiLayerModel* model, double* expectedSigns) {
+	void retropropagateLayersClassification(MultiLayerModel* model, int* expectedSigns) {
 		calculateClassificationDeltas(model, expectedSigns);
 		retropropagateModel(model);
 	}
@@ -171,17 +171,15 @@ extern "C" {
 		retropropagateModel(model);
 	}
 
-	void calculateClassificationDeltas(MultiLayerModel* model, double* expectedSigns)
+	void calculateOthersDelta(MultiLayerModel* model)
 	{
-		for (int lastNeurone = 0; lastNeurone < model->nplParams[model->nbLayers - 1]; lastNeurone++)
-		{
-			model->deltas[model->nbLayers - 2][lastNeurone] = (1 - pow(model->neuronesResults[model->nbLayers - 1][lastNeurone], 2)) * (model->neuronesResults[model->nbLayers - 1][lastNeurone] - expectedSigns[lastNeurone]);
-		}
+		//Calcul des deltas des autres couches
 		for (int layer = model->nbLayers - 2; layer > 0; layer--)
 		{
-			for (int neur = 0; neur < model->nplParams[layer] + 1; neur++)
+			for (int neur = 0; neur < model->nplParams[layer]; neur++)
 			{
 				double sigma = 0.0;
+				//Pas le poids du biais dans le sigma
 				for (int nextNeur = 0; nextNeur < model->nplParams[layer + 1]; nextNeur++)
 				{
 					sigma += model->w[layer][neur][nextNeur] * model->deltas[layer][nextNeur];
@@ -191,24 +189,23 @@ extern "C" {
 		}
 	}
 
+	void calculateClassificationDeltas(MultiLayerModel* model, int* expectedSigns)
+	{
+		//Calcul des deltas de la derniere couche
+		for (int lastNeurone = 0; lastNeurone < model->nplParams[model->nbLayers - 1]; lastNeurone++)
+		{
+			model->deltas[model->nbLayers - 2][lastNeurone] = (1 - pow(model->neuronesResults[model->nbLayers - 1][lastNeurone], 2)) * (model->neuronesResults[model->nbLayers - 1][lastNeurone] - expectedSigns[lastNeurone]);
+		}
+		calculateOthersDelta(model);
+	}
+
 	void calculateRegressionDeltas(MultiLayerModel* model, double* expectedSigns)
 	{
 		for (int lastNeurone = 0; lastNeurone < model->nplParams[model->nbLayers - 1]; lastNeurone++)
 		{
 			model->deltas[model->nbLayers - 2][lastNeurone] = (model->neuronesResults[model->nbLayers - 1][lastNeurone] - expectedSigns[lastNeurone]);
 		}
-		for (int layer = model->nbLayers - 2; layer > 0; layer--)
-		{
-			for (int neur = 0; neur < model->nplParams[layer] + 1; neur++)
-			{
-				double sigma = 0.0;
-				for (int nextNeur = 0; nextNeur < model->nplParams[layer + 1]; nextNeur++)
-				{
-					sigma += model->w[layer][neur][nextNeur] * model->deltas[layer][nextNeur];
-				}
-				model->deltas[layer - 1][neur] = (1 - pow(model->neuronesResults[layer][neur], 2)) * sigma;
-			}
-		}
+		calculateOthersDelta(model);
 	}
 
 	void retropropagateModel(MultiLayerModel* model)
@@ -264,14 +261,14 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) void predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk, double* outputk) {
+	__declspec(dllexport) double* predictMultilayerClassificationModel(MultiLayerModel* model, double* inputk) {
 		processPredictLayers(model, inputk, false);
-		memcpy(outputk, model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->nplParams[model->nbLayers - 1]);
+		return model->neuronesResults[model->nbLayers - 1];
 	}
 	
-	__declspec(dllexport) void predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk, double* outputk) {
+	__declspec(dllexport) double*  predictMultilayerRegressionModel(MultiLayerModel* model, double* inputk) {
 		processPredictLayers(model, inputk, true);
-		memcpy(outputk, model->neuronesResults[model->nbLayers - 1], sizeof(double) * model->nplParams[model->nbLayers - 1]);
+		return model->neuronesResults[model->nbLayers - 1];
 	}
 
 	__declspec(dllexport) void releaseModel(double* model)
@@ -307,7 +304,6 @@ extern "C" {
 	}
 
 	double randomDouble() {
-		srand(time(nullptr));
 		return ((double)rand() / RAND_MAX) * 2 - 1;
 	}
 }
