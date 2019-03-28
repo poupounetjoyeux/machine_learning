@@ -35,6 +35,9 @@ namespace Assets
         [DllImport("ClassificationDLL")]
         public static extern double predictRbfModelRegression(IntPtr model, double[] inputk);
 
+        [DllImport("ClassificationDLL")]
+        public static extern int predictRbfModelClassification(IntPtr model, double[] inputk);
+
         #endregion
 
         #region Training
@@ -57,6 +60,9 @@ namespace Assets
 
         [DllImport("ClassificationDLL")]
         public static extern void trainRbfModelRegression(IntPtr model, double[] expectedSigns);
+
+        [DllImport("ClassificationDLL")]
+        public static extern void trainRbfModelClassification(IntPtr model, int[] expectedSigns);
 
         #endregion
 

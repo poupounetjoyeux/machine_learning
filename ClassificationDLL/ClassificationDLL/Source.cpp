@@ -397,6 +397,39 @@ extern "C" {
 
 	#pragma region Classification
 
+	__declspec(dllexport) int predictRbfModelClassification(RbfModel* model, double* inputk);
+	__declspec(dllexport) void trainRbfModelClassification(RbfModel* model, int* expectedSigns);
+
+	__declspec(dllexport) int predictRbfModelClassification(RbfModel* model, double* inputk) {
+		double sigma = 0;
+		Vector2d pointStart(inputk[0], inputk[1]);
+		for (int j = 0; j < model->nbInputs; j++) {
+			Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
+			sigma += model->w[j] * exp(-model->gamma * (pointStart - pointEnd).squaredNorm());
+		}
+		return signOf(sigma);
+	}
+
+	__declspec(dllexport) void trainRbfModelClassification(RbfModel* model, int* expectedSigns) {
+
+		MatrixXd xMatrix(model->nbInputs, model->nbInputs);
+		MatrixXd yMatrix(model->nbInputs, 1);
+
+		for (int i = 0; i < model->nbInputs; i++) {
+			yMatrix(i, 0) = expectedSigns[i];
+			Vector2d pointStart(model->inputs[i * 2], model->inputs[i * 2 + 1]);
+			for (int j = 0; j < model->nbInputs; j++) {
+				Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
+				xMatrix(i, j) = exp(-model->gamma * (pointStart - pointEnd).squaredNorm());
+			}
+		}
+
+		MatrixXd result = xMatrix.inverse() * yMatrix;
+		for (int i = 0; i < model->nbInputs; i++) {
+			model->w[i] = result(i, 0);
+		}
+	}
+
 	#pragma endregion
 
 	#pragma region Regression
@@ -409,7 +442,7 @@ extern "C" {
 		Vector2d pointStart(inputk[0], inputk[1]);
 		for (int j = 0; j < model->nbInputs; j++) {
 			Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
-			sigma += model->w[j] * exp(-model->gamma * pow((pointStart.norm() - pointEnd.norm()), 2));
+			sigma += model->w[j] * exp(-model->gamma * (pointStart - pointEnd).squaredNorm());
 		}
 		return sigma;
 	}
@@ -424,14 +457,8 @@ extern "C" {
 			Vector2d pointStart(model->inputs[i * 2], model->inputs[i * 2 + 1]);
 			for (int j = 0; j < model->nbInputs; j++) {
 				Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
-				xMatrix(i, j) = exp(-model->gamma * pow((pointStart.norm() - pointEnd.norm()), 2));
+				xMatrix(i, j) = exp(-model->gamma * (pointStart - pointEnd).squaredNorm());
 			}
-		}
-
-		FullPivLU<MatrixXd> lu(xMatrix);
-		if (!lu.isInvertible())
-		{
-			xMatrix(0, 0) = xMatrix(0, 0) + 0.001;
 		}
 
 		MatrixXd result = xMatrix.inverse() * yMatrix;
