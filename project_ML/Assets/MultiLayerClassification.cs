@@ -46,7 +46,7 @@ namespace Assets
             if (NplParams.Length == 0)
             {
                 Debug.LogError("You need to have at least 2 layers in you NPL Params");
-                Application.Quit();
+                return;
             }
             _spheresPlan = GameObject.FindGameObjectsWithTag("plan");
             _spheres = GameObject.FindGameObjectsWithTag("sphere");
