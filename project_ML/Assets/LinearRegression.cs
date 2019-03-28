@@ -42,8 +42,8 @@ namespace Assets
                     totalX += position.x;
                     totalZ += position.z;
                 }
-                _centerX = totalX / allPointsWith1.Count();
-                _centerZ = totalZ / allPointsWith1.Count();
+                _centerX = totalX / allPointsWith1.Count;
+                _centerZ = totalZ / allPointsWith1.Count;
             }
             
             if (_mode == CustomMode.Xor)
@@ -56,8 +56,8 @@ namespace Assets
                     totalX += position.x;
                     totalZ += position.z;
                 }
-                _centerX = totalX / allPointsWith1.Count();
-                _centerZ = totalZ / allPointsWith1.Count();
+                _centerX = totalX / allPointsWith1.Length;
+                _centerZ = totalZ / allPointsWith1.Length;
             }
             
             Debug.Log("Found center at X = "+_centerX+" | Z = "+_centerZ);

@@ -50,9 +50,7 @@ extern "C" {
 	
 	__declspec(dllexport) double* createModel(int inputsDimension) {
 		srand(time(nullptr));
-		double *arr = (double*)malloc(sizeof(double)*inputsDimension + 1);
-		
-		
+		double *arr = (double*)malloc(sizeof(double) * inputsDimension + 1);
 		for (int i = 0; i < inputsDimension + 1; i ++)
 		{
 			arr[i] = randomDouble();

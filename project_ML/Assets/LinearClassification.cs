@@ -67,8 +67,8 @@ namespace Assets
                     totalX += position.x;
                     totalZ += position.z;
                 }
-                _centerX = totalX / allPointsWith1.Count();
-                _centerZ = totalZ / allPointsWith1.Count();
+                _centerX = totalX / allPointsWith1.Count;
+                _centerZ = totalZ / allPointsWith1.Count;
             }
 
             if (Mode == CustomMode.Xor)
@@ -81,10 +81,9 @@ namespace Assets
                     totalX += position.x;
                     totalZ += position.z;
                 }
-                _centerX = totalX / allPointsWith1.Count();
-                _centerZ = totalZ / allPointsWith1.Count();
+                _centerX = totalX / allPointsWith1.Length;
+                _centerZ = totalZ / allPointsWith1.Length;
             }
-            
 
             Debug.Log("Found center at X = "+_centerX+" | Z = "+_centerZ);
             
@@ -116,9 +115,8 @@ namespace Assets
                 case CustomMode.Circle:
                     return Math.Pow(x - _centerX, 2);
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    return x;
             }
-            
         }
         
         private double MapPositionZ(double z)
@@ -132,7 +130,7 @@ namespace Assets
                 case CustomMode.Circle:
                     return Math.Pow(z - _centerZ, 2);
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    return z;
             }
         }
 
