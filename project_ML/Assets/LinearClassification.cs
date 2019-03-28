@@ -8,7 +8,7 @@ namespace Assets
    
     public class LinearClassification : MonoBehaviour
     {
-        public const int Dimensions = 2;
+        private int _dimensions = 2;
         
         private GameObject[] _spheresPlan;
         private GameObject[] _spheres;
@@ -47,6 +47,7 @@ namespace Assets
 
         private void Start()
         {
+            _dimensions = _mode == CustomMode.Xor ? 1 : 2;
             _spheresPlan = GameObject.FindGameObjectsWithTag("plan");
             _spheres = GameObject.FindGameObjectsWithTag("sphere");
 
@@ -54,7 +55,7 @@ namespace Assets
             Debug.Log($"PlanSphere number : {_spheresPlan.Length}");
             Debug.Log("Starting to call library for a LinearClassification");
 
-            _model = ClassificationLibrary.createModel(Dimensions);
+            _model = ClassificationLibrary.createModel(_dimensions);
 
             if (Mode == CustomMode.Circle)
             {
@@ -141,14 +142,14 @@ namespace Assets
             {
                 return;
             }
-            ClassificationLibrary.trainModelLinearClassification(_model, _inputs.ToArray(), Dimensions, _spheres.Length, _expectedSigns, LearnStep, NumberOfIterations);
+            ClassificationLibrary.trainModelLinearClassification(_model, _inputs.ToArray(), _dimensions, _spheres.Length, _expectedSigns, LearnStep, NumberOfIterations);
 
             foreach (var sphere in _spheresPlan)
             {
                 var position = sphere.transform.position;
                 var point = Mode != CustomMode.Xor ? new[] {MapPositionX(position.x), MapPositionZ(position.z)} : new[] {MapPositionX(position.x) * MapPositionZ(position.z)};
 
-                var newY = ClassificationLibrary.predictClassificationModel(_model, point, Dimensions);
+                var newY = ClassificationLibrary.predictClassificationModel(_model, point, _dimensions);
                 sphere.transform.position = new Vector3(position.x, newY, position.z);
             }
         }
