@@ -1,6 +1,9 @@
 #include "Eigen/Dense"
 #include <ctime>
 #include <math.h>
+#include <algorithm>
+
+using namespace std;
 
 using Eigen::MatrixXd;
 using Eigen::FullPivLU;
@@ -20,6 +23,7 @@ extern "C" {
 
 	int signOf(double number);
 	double randomDouble();
+	int* randomIndexes(int nbInputs);
 
 	void retropropagateLayersClassification(MultiLayerModel* model, int* expectedSigns);
 	void calculateClassificationDeltas(MultiLayerModel* model, int* expectedSigns);
@@ -139,22 +143,28 @@ extern "C" {
 	__declspec(dllexport) void trainModelMultilayerClassification(MultiLayerModel* model, double* inputs, int nbInputs, int* expectedSigns, int iterations) {
 		for (int i = 0; i < iterations; i++)
 		{
-			for (int input = 0; input < nbInputs; input++)
+			int* randoms = randomIndexes(nbInputs);
+			for (int j = 0; j < nbInputs; j++)
 			{
+				int input = randoms[j];
 				processPredictLayers(model, inputs + (input * model->nplParams[0]), false);
 				retropropagateLayersClassification(model, expectedSigns + (input * model->nplParams[model->nbLayers - 1]));
 			}
+			free(randoms);
 		}
 	}
 
 	__declspec(dllexport) void trainModelMultilayerRegression(MultiLayerModel* model, double* inputs, int nbInputs, double* expectedSigns, int iterations) {
 		for (int i = 0; i < iterations; i++)
 		{
-			for (int input = 0; input < nbInputs; input++)
+			int* randoms = randomIndexes(nbInputs);
+			for (int j = 0; j < nbInputs; j++)
 			{
+				int input = randoms[j];
 				processPredictLayers(model, inputs + (input * model->nplParams[0]), true);
 				retropropagateLayersRegression(model, expectedSigns + (input * model->nplParams[model->nbLayers - 1]));
 			}
+			free(randoms);
 		}
 	}
 
@@ -303,5 +313,15 @@ extern "C" {
 
 	double randomDouble() {
 		return ((double)rand() / RAND_MAX) * 2 - 1;
+	}
+
+	int* randomIndexes(int nbInputs) {
+		int* randoms = (int*)malloc(sizeof(int) * nbInputs);
+		for (int i = 0; i < nbInputs; i++)
+		{
+			randoms[i] = i;
+		}
+		random_shuffle(randoms, &randoms[nbInputs - 1]);
+		return randoms;
 	}
 }
