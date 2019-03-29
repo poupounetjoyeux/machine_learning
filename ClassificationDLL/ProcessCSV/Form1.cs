@@ -77,11 +77,11 @@ namespace ProcessCSV
                 var npl = nplParamsTxt.Text.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse)
                     .ToArray();
                 var model = ClassificationLibrary.createMultilayerModel(npl, npl.Length, (double) learnStepNum.Value);
-                ClassificationLibrary.trainModelMultilayerClassification(model, inputs.ToArray(), inputs.Count / 10,
+                ClassificationLibrary.trainModelMultilayerClassification(model, inputs.ToArray(), inputs.Count / 11,
                     expectedSigns.ToArray(), (int) iterationsNum.Value);
 
                 var result = new Dictionary<int, int>();
-                for (var i = 0; i < 10; i++)
+                for (var i = 0; i < 11; i++)
                 {
                     result.Add(i, 0);
                 }
@@ -109,11 +109,11 @@ namespace ProcessCSV
                     }
                 }
 
-                for (var i = 0; i < inputs.Count; i += 10)
+                for (var i = 0; i < inputs.Count; i += 11)
                 {
                     if ((Type)typeCbx.SelectedItem == Type.MulticoucheRegression)
                     {
-                        var point = inputs.GetRange(i, 10).ToArray();
+                        var point = inputs.GetRange(i, 11).ToArray();
                         var output = new double[1];
                         var prediction = ClassificationLibrary.predictMultilayerClassificationModel(model, point);
                         Marshal.Copy(prediction, output, 0, 1);
