@@ -22,7 +22,7 @@ namespace Assets
 
             Debug.Log($"Sphere number : {spheres.Length}");
             Debug.Log($"PlanSphere number : {spheresPlan.Length}");
-            Debug.Log("Starting to call library for a LinearRegression");
+            Debug.Log("Starting to call library for a RBFClassification");
 
             var expectedSigns = spheres.Select(sp => sp.transform.position.y < 0 ? -1 : 1).ToArray();
             var inputs = new List<double>();
@@ -46,7 +46,7 @@ namespace Assets
                 if (double.IsNaN(newY))
                 {
                     ClassificationLibrary.releaseRbfModel(model);
-                    Debug.LogError("It seems that some ofe exemples inputs are in collision");
+                    Debug.LogError("It seems that some of exemples inputs are in collision");
                     return;
                 }
                 sphere.transform.position = new Vector3(position.x, newY, position.z);

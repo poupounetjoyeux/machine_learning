@@ -442,7 +442,7 @@ extern "C" {
 		Vector2d pointStart(inputk[0], inputk[1]);
 		for (int j = 0; j < model->nbInputs; j++) {
 			Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
-			sigma += model->w[j] * exp(-model->gamma * (pointStart - pointEnd).squaredNorm());
+			sigma += model->w[j] * exp(-model->gamma * (pointStart.squaredNorm() - 2 * pointStart.dot(pointEnd) + pointStart.squaredNorm()));
 		}
 		return sigma;
 	}
@@ -457,7 +457,7 @@ extern "C" {
 			Vector2d pointStart(model->inputs[i * 2], model->inputs[i * 2 + 1]);
 			for (int j = 0; j < model->nbInputs; j++) {
 				Vector2d pointEnd(model->inputs[j * 2], model->inputs[j * 2 + 1]);
-				xMatrix(i, j) = exp(-model->gamma * (pointStart - pointEnd).squaredNorm());
+				xMatrix(i, j) = exp(-model->gamma * (pointStart.squaredNorm() - 2 * pointStart.dot(pointEnd) + pointStart.squaredNorm()));
 			}
 		}
 

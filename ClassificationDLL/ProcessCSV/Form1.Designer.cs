@@ -122,7 +122,8 @@
             this.nplParamsTxt.Name = "nplParamsTxt";
             this.nplParamsTxt.Size = new System.Drawing.Size(170, 20);
             this.nplParamsTxt.TabIndex = 9;
-            this.nplParamsTxt.Text = "2;1";
+            this.nplParamsTxt.Text = "11;7";
+            this.nplParamsTxt.TextChanged += new System.EventHandler(this.nplParamsTxt_TextChanged);
             // 
             // nplLbl
             // 
@@ -208,7 +209,7 @@
             this.iterationsNum.Size = new System.Drawing.Size(120, 20);
             this.iterationsNum.TabIndex = 16;
             this.iterationsNum.Value = new decimal(new int[] {
-            1000,
+            1500,
             0,
             0,
             0});

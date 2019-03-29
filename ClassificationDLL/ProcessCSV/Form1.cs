@@ -10,7 +10,7 @@ namespace ProcessCSV
 {
     public enum Type
     {
-        MulticoucheRegression
+        MulticoucheClassification
     }
 
     public partial class Form1 : Form
@@ -47,41 +47,48 @@ namespace ProcessCSV
 
         private void processBtn_Click(object sender, EventArgs e)
         {
-            var expectedSigns = new List<int>();
-            var inputs = new List<double>();
-            using (var reader = new StreamReader(trainDataSetPath.Text))
-            using (var csv = new CsvReader(reader))
-            {
-                csv.Configuration.PrepareHeaderForMatch =
-                    (header, idx) => header.Replace(" ", string.Empty).ToLower();
-                var records = csv.GetRecords<WineLine>();
-                foreach (var record in records)
-                {
-                    expectedSigns.Add(record.quality);
-                    inputs.Add(record.fixedacidity);
-                    inputs.Add(record.volatileacidity);
-                    inputs.Add(record.citricacid);
-                    inputs.Add(record.residualsugar);
-                    inputs.Add(record.chlorides);
-                    inputs.Add(record.freesulfurdioxide);
-                    inputs.Add(record.totalsulfurdioxide);
-                    inputs.Add(record.density);
-                    inputs.Add(record.ph);
-                    inputs.Add(record.sulphates);
-                    inputs.Add(record.alcohol);
-                }
-            }
             
-            if ((Type) typeCbx.SelectedItem == Type.MulticoucheRegression)
+            
+            if ((Type) typeCbx.SelectedItem == Type.MulticoucheClassification)
             {
                 var npl = nplParamsTxt.Text.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse)
                     .ToArray();
+                var expectedSigns = new List<int>();
+                var inputs = new List<double>();
+                using (var reader = new StreamReader(trainDataSetPath.Text))
+                using (var csv = new CsvReader(reader))
+                {
+                    csv.Configuration.PrepareHeaderForMatch =
+                        (header, idx) => header.Replace(" ", string.Empty).ToLower();
+                    var records = csv.GetRecords<WineLine>();
+                    foreach (var record in records)
+                    {
+                        var expected = new double[npl[npl.Length - 1]];
+                        for (var i = 0; i < npl[npl.Length - 1]; i++)
+                        {
+                            expected[i] = i + 3 == record.quality ? 1 : -1;
+                        }
+
+                        expectedSigns.AddRange(expected.Select(x => (int)x).ToArray());
+                        inputs.Add(record.fixedacidity);
+                        inputs.Add(record.volatileacidity);
+                        inputs.Add(record.citricacid);
+                        inputs.Add(record.residualsugar);
+                        inputs.Add(record.chlorides);
+                        inputs.Add(record.freesulfurdioxide);
+                        inputs.Add(record.totalsulfurdioxide);
+                        inputs.Add(record.density);
+                        inputs.Add(record.ph);
+                        inputs.Add(record.sulphates);
+                        inputs.Add(record.alcohol);
+                    }
+                }
                 var model = ClassificationLibrary.createMultilayerModel(npl, npl.Length, (double) learnStepNum.Value);
                 ClassificationLibrary.trainModelMultilayerClassification(model, inputs.ToArray(), inputs.Count / 11,
                     expectedSigns.ToArray(), (int) iterationsNum.Value);
 
                 var result = new Dictionary<int, int>();
-                for (var i = 0; i < 11; i++)
+                for (var i = 0; i < npl[npl.Length - 1]; i++)
                 {
                     result.Add(i, 0);
                 }
@@ -94,7 +101,6 @@ namespace ProcessCSV
                     var records = csv.GetRecords<WineLine>();
                     foreach (var record in records)
                     {
-                        expectedSigns.Add(record.quality);
                         inputs.Add(record.fixedacidity);
                         inputs.Add(record.volatileacidity);
                         inputs.Add(record.citricacid);
@@ -111,13 +117,13 @@ namespace ProcessCSV
 
                 for (var i = 0; i < inputs.Count; i += 11)
                 {
-                    if ((Type)typeCbx.SelectedItem == Type.MulticoucheRegression)
+                    if ((Type)typeCbx.SelectedItem == Type.MulticoucheClassification)
                     {
                         var point = inputs.GetRange(i, 11).ToArray();
-                        var output = new double[1];
+                        var output = new double[npl[npl.Length - 1]];
                         var prediction = ClassificationLibrary.predictMultilayerClassificationModel(model, point);
-                        Marshal.Copy(prediction, output, 0, 1);
-                        result[(int)output[0]]++;
+                        Marshal.Copy(prediction, output, 0, npl[npl.Length - 1]);
+                        result[Array.IndexOf(output, output.Max())]++;
                     }
                 }
 
@@ -127,6 +133,5 @@ namespace ProcessCSV
                 resultChart.DataSource = result;
             }
         }
-
     }
 }
