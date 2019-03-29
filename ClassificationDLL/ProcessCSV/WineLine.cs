@@ -2,17 +2,17 @@
 {
     public class WineLine
     {
-        public double FixedAcidity { get; set; }
-        public double VolatileAcidity { get; set; }
-        public double CitricAcid { get; set; }
-        public double ResidualSugar { get; set; }
-        public double Chlorides { get; set; }
-        public int FreeSulfurDioxide { get; set; }
-        public int TotalSulfurDioxide { get; set; }
-        public double Density { get; set; }
-        public double Ph { get; set; }
-        public double Sulphates { get; set; }
-        public double Alcohol { get; set; }
-        public int Quality { get; set; }
+        public double fixedacidity { get; set; }
+        public double volatileacidity { get; set; }
+        public double citricacid { get; set; }
+        public double residualsugar { get; set; }
+        public double chlorides { get; set; }
+        public double freesulfurdioxide { get; set; }
+        public double totalsulfurdioxide { get; set; }
+        public double density { get; set; }
+        public double ph { get; set; }
+        public double sulphates { get; set; }
+        public double alcohol { get; set; }
+        public int quality { get; set; }
     }
 }

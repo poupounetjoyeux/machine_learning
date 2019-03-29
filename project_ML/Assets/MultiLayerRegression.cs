@@ -66,11 +66,11 @@ namespace Assets
             _model = ClassificationLibrary.createMultilayerModel(NplParams, NplParams.Length, LearnStep);
 
             _inputs = new List<double>();
-            var _expectedSignsList = new List<double>();
+            var expectedSignsList = new List<double>();
             
             if (Mode == MultilayerMode.yPosition)
             {
-                _expectedSignsList = _spheres.Select(sp => (double) sp.transform.position.y).ToList();    
+                expectedSignsList = _spheres.Select(sp => (double) sp.transform.position.y).ToList();    
             }
 
             foreach (var sphere in _spheres)
@@ -81,12 +81,12 @@ namespace Assets
                 if (Mode == MultilayerMode.Color)
                 {
                     var color = sphere.GetComponent<Renderer>().material.color;
-                    _expectedSignsList.Add(color.r);
-                    _expectedSignsList.Add(color.g);
-                    _expectedSignsList.Add(color.b);
+                    expectedSignsList.Add(color.r);
+                    expectedSignsList.Add(color.g);
+                    expectedSignsList.Add(color.b);
                 }
             }
-            _expectedSigns = _expectedSignsList.ToArray();
+            _expectedSigns = expectedSignsList.ToArray();
         }
 
         private void Update()

@@ -147,7 +147,7 @@ extern "C" {
 	void processPredictLayers(MultiLayerModel* model, double* inputk, bool isRegression);
 	void calculateOthersDelta(MultiLayerModel* model);
 	void retropropagateModel(MultiLayerModel* model);
-	__declspec(dllexport) MultiLayerModel* createMultilayerModel(int* superParam, int nbLayer, double learnStep);
+	__declspec(dllexport) MultiLayerModel* createMultilayerModel(int* nplParams, int nbLayer, double learnStep);
 	__declspec(dllexport) void releaseMultilayerModel(MultiLayerModel* model);
 
 	__declspec(dllexport) MultiLayerModel* createMultilayerModel(int* nplParams, int nbLayer, double learnStep) {

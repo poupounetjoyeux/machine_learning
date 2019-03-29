@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using CsvHelper;
 
 namespace ProcessCSV
 {
+    public enum Type
+    {
+        MulticoucheRegression
+    }
+
     public partial class Form1 : Form
     {
         public Form1()
@@ -21,7 +22,7 @@ namespace ProcessCSV
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            typeCbx.DataSource = Enum.GetValues(typeof(Type));
         }
 
         private void chooseDatasetTrain_Click(object sender, EventArgs e)
@@ -51,23 +52,81 @@ namespace ProcessCSV
             using (var reader = new StreamReader(trainDataSetPath.Text))
             using (var csv = new CsvReader(reader))
             {
+                csv.Configuration.PrepareHeaderForMatch =
+                    (header, idx) => header.Replace(" ", string.Empty).ToLower();
                 var records = csv.GetRecords<WineLine>();
                 foreach (var record in records)
                 {
-                    expectedSigns.Add(record.Quality);
-                    inputs.Add(record.FixedAcidity);
-                    inputs.Add(record.VolatileAcidity);
-                    inputs.Add(record.CitricAcid);
-                    inputs.Add(record.ResidualSugar);
-                    inputs.Add(record.Chlorides);
-                    inputs.Add(record.FreeSulfurDioxide);
-                    inputs.Add(record.TotalSulfurDioxide);
-                    inputs.Add(record.Density);
-                    inputs.Add(record.Ph);
-                    inputs.Add(record.Sulphates);
-                    inputs.Add(record.Alcohol);
+                    expectedSigns.Add(record.quality);
+                    inputs.Add(record.fixedacidity);
+                    inputs.Add(record.volatileacidity);
+                    inputs.Add(record.citricacid);
+                    inputs.Add(record.residualsugar);
+                    inputs.Add(record.chlorides);
+                    inputs.Add(record.freesulfurdioxide);
+                    inputs.Add(record.totalsulfurdioxide);
+                    inputs.Add(record.density);
+                    inputs.Add(record.ph);
+                    inputs.Add(record.sulphates);
+                    inputs.Add(record.alcohol);
                 }
             }
+            
+            if ((Type) typeCbx.SelectedItem == Type.MulticoucheRegression)
+            {
+                var npl = nplParamsTxt.Text.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse)
+                    .ToArray();
+                var model = ClassificationLibrary.createMultilayerModel(npl, npl.Length, (double) learnStepNum.Value);
+                ClassificationLibrary.trainModelMultilayerClassification(model, inputs.ToArray(), inputs.Count / 10,
+                    expectedSigns.ToArray(), (int) iterationsNum.Value);
+
+                var result = new Dictionary<int, int>();
+                for (var i = 0; i < 10; i++)
+                {
+                    result.Add(i, 0);
+                }
+
+                using (var reader = new StreamReader(testDatasetPath.Text))
+                using (var csv = new CsvReader(reader))
+                {
+                    csv.Configuration.PrepareHeaderForMatch =
+                        (header, idx) => header.Replace(" ", string.Empty).ToLower();
+                    var records = csv.GetRecords<WineLine>();
+                    foreach (var record in records)
+                    {
+                        expectedSigns.Add(record.quality);
+                        inputs.Add(record.fixedacidity);
+                        inputs.Add(record.volatileacidity);
+                        inputs.Add(record.citricacid);
+                        inputs.Add(record.residualsugar);
+                        inputs.Add(record.chlorides);
+                        inputs.Add(record.freesulfurdioxide);
+                        inputs.Add(record.totalsulfurdioxide);
+                        inputs.Add(record.density);
+                        inputs.Add(record.ph);
+                        inputs.Add(record.sulphates);
+                        inputs.Add(record.alcohol);
+                    }
+                }
+
+                for (var i = 0; i < inputs.Count; i += 10)
+                {
+                    if ((Type)typeCbx.SelectedItem == Type.MulticoucheRegression)
+                    {
+                        var point = inputs.GetRange(i, 10).ToArray();
+                        var output = new double[1];
+                        var prediction = ClassificationLibrary.predictMultilayerClassificationModel(model, point);
+                        Marshal.Copy(prediction, output, 0, 1);
+                        result[(int)output[0]]++;
+                    }
+                }
+
+                ClassificationLibrary.releaseMultilayerModel(model);
+                resultChart.LabelMemberPath = "Key";
+                resultChart.ValueMemberPath = "Value";
+                resultChart.DataSource = result;
+            }
         }
+
     }
 }
